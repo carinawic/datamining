@@ -3,7 +3,7 @@ import networkx as nx
 import pickle
 import matplotlib.pyplot as plt
 
-dataset_list = ["E13", "FSF", "INT", "TFP", "TWT"]
+dataset_list = ["E13_real", "FSF_bot", "INT_bot", "TFP_real", "TWT_bot"]
 
 
 def remove_outsiders(user_df, edge_df):
@@ -88,22 +88,22 @@ def create_network(type):
         users = pd.read_csv("data/{}/users.csv".format(dataset_list[0]), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
         for dataset in dataset_list[1:]:
             temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
-            temp_users["dataset_name"] = dataset
             users = users.append(temp_users, ignore_index=True)
-            users.append(temp_users, ignore_index=True)
-        #save_pickle(users, "users_df.pickle")
+            # print(f'users size {users.shape[0]}')
+        # save_pickle(users, "users_df.pickle")
 
     if not edges_exist:
         edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int)
         for dataset in dataset_list[1:]:
             temp_edges = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int)
-            edges.append(temp_edges, ignore_index=True)
-        #save_pickle(edges, "{}_edges_df.pickle".format(type))
+            edges = edges.append(temp_edges, ignore_index=True)
+            # print(f'edges size {edges.shape[0]}')
+        # save_pickle(edges, "{}_edges_df.pickle".format(type))
 
     new_edges = remove_outsiders(users, edges)
 
     G = generate_directed_network(new_edges)
-    #save_pickle(G, "graph.pickle")
+    # save_pickle(G, "graph.pickle")
 
     return G
 
