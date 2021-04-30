@@ -1,11 +1,9 @@
-import csv
-
 import pandas as pd
 import networkx as nx
 import pickle
 import matplotlib.pyplot as plt
 
-dataset_list = ["E13_real", "FSF_bot", "INT_bot", "TFP_real", "TWT_bot"]
+dataset_list = ["E13", "FSF", "INT", "TFP", "TWT"]
 
 
 def remove_outsiders(user_df, edge_df):
@@ -39,7 +37,7 @@ def draw_directed_graph(directed_graph):
     # Need to create a layout when doing
     # separate calls to draw nodes and edges
     pos = nx.spring_layout(directed_graph)
-    nx.draw_networkx_nodes(directed_graph, pos, node_size=4)
+    nx.draw_networkx_nodes(directed_graph, pos)
     nx.draw_networkx_edges(directed_graph, pos, arrows=True)
     plt.show()
 
@@ -88,11 +86,11 @@ def create_network(type):
 
     if not users_exist:
         users = pd.read_csv("data/{}/users.csv".format(dataset_list[0]), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
-        users["dataset_name"] = dataset_list[0]
         for dataset in dataset_list[1:]:
             temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
             temp_users["dataset_name"] = dataset
             users = users.append(temp_users, ignore_index=True)
+            users.append(temp_users, ignore_index=True)
         #save_pickle(users, "users_df.pickle")
 
     if not edges_exist:
@@ -104,10 +102,7 @@ def create_network(type):
 
     new_edges = remove_outsiders(users, edges)
 
-    users.to_csv("all_users.csv", sep=" ", header=False, index=False, quoting=csv.QUOTE_NONNUMERIC, columns=["id", "dataset_name"])
-    new_edges.to_csv("edges_friends.csv", sep=" ", header=False, index=False, quoting=csv.QUOTE_NONNUMERIC)
-
-    G = "wi" #generate_directed_network(new_edges)
+    G = generate_directed_network(new_edges)
     #save_pickle(G, "graph.pickle")
 
     return G
@@ -115,4 +110,4 @@ def create_network(type):
 
 if __name__ == '__main__':
     G = create_network("friends")
-    #draw_directed_graph(G)
+    draw_directed_graph(G)
