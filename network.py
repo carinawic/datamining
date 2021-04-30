@@ -92,6 +92,7 @@ def create_network(type):
         for dataset in dataset_list[1:]:
             temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
             temp_users["dataset_name"] = dataset
+            users = users.append(temp_users, ignore_index=True)
         #save_pickle(users, "users_df.pickle")
 
     if not edges_exist:
