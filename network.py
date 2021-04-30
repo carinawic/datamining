@@ -97,7 +97,7 @@ def create_network(type):
         edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int)
         for dataset in dataset_list[1:]:
             temp_edges = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int)
-            edges.append(temp_edges, ignore_index=True)
+            edges = edges.append(temp_edges, ignore_index=True)
         #save_pickle(edges, "{}_edges_df.pickle".format(type))
 
     new_edges = remove_outsiders(users, edges)
@@ -110,4 +110,4 @@ def create_network(type):
 
 if __name__ == '__main__':
     G = create_network("friends")
-    draw_directed_graph(G)
+    draw_directed_graph(G)    #draw_directed_graph(G)
