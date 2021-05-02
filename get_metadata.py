@@ -29,6 +29,42 @@ import pandas as pd
 from tweepy import TweepError
 from time import sleep
 
+def benford(output_file_short):
+    
+    benfords_probs = {
+        1 : 30.1,
+        2 : 17.6,
+        3 : 12.5,
+        4 : 9.7,
+        5 : 7.9,
+        6 : 6.7,
+        7 : 5.8,
+        8 : 5.1,
+        9 : 4.6
+    }
+
+    d = dict()
+    total_num_values = 0
+
+    with open(output_file_short) as master_file:
+        for user in master_file:
+            data = json.loads(user)
+
+            first_digit = (int(str(data["friends_count"])[:1]))
+            
+            if first_digit in d:
+                # Increment count of word by 1
+                d[first_digit] = d[first_digit] + 1
+            else:
+                # Add the word to dictionary with count 1
+                d[first_digit] = 1
+            
+            total_num_values += 1
+
+    for key in list(d.keys()):
+        print(f'{key} occured {d[key]} times out of {total_num_values} => {d[key]/total_num_values*100}% which should be {benfords_probs[key]}% => we are off by {d[key]/total_num_values*100 - benfords_probs[key]:.1f} %')
+
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -129,13 +165,13 @@ def main():
                     outfile.write('\n')
     except:
         print('exception: continuing to zip the file')
-
+    """
     print('creating ziped master json file')
     zf = zipfile.ZipFile('{}.zip'.format(output_file_noformat), mode='w')
     zf.write(output_file, compress_type=compression)
     zf.close()
-    
-
+    """
+    """
     # This is where we pick what we want from the user
     print('creating minimized json master file')
     with open(output_file_short, 'w') as outfile:
@@ -158,6 +194,8 @@ def main():
         for user in master_file:
             data = json.loads(user)
             f.writerow([data["user_id"], data["followers_count"], data["friends_count"]])
+    """
+    benford(output_file_short)
     
 
 # main invoked here    
