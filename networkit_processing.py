@@ -20,12 +20,14 @@ def compute_diameter(G):
     # diameter. In this case, the diameter is the first value of the pair
     print(f"Graph diameter {diam.getDiameter()}")
 
+
 def clustering(G):
     # The clustering coefficient is computed as the average of the local clustering
     # coefficient over all nodes. The local clustering coefficient focuses on a single
     # node and counts how many possible edges between neighbors of the node exist
     cc = nk.globals.clustering(G)
     print(f"Clustering coefficent {cc}")
+
 
 # the networkit implementation is based on parallel power iteration
 def eigenvector_centrality(G):
@@ -57,6 +59,7 @@ def analyse_connectivity(G):
     wcc.run()
     no_wcc = wcc.numberOfComponents()
     print("No of SCCs %d\nNo of WCCs %d"%(no_scc, no_wcc))
+
 
 def compute_network_stats(G):
     # analyse_connectivity(G)

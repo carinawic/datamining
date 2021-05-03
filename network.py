@@ -224,13 +224,17 @@ def analyse_each_dataset():
         G = generate_network(dataset, type='followers')
         compute_graph_stats(G)
 
+
+def convert_graph_to_gml(G, filepath):
+    nx.write_gml(G, filepath)
+
 if __name__ == '__main__':
     # G = create_network("friends", dataset_list)
 
-    # humans_graph = create_network("", dataset_list[0:2])
-    # nx.write_gml(humans_graph, 'humans_graph.gml')
+    humans_graph = create_network("", dataset_list[0:2])
+    convert_graph_to_gml(humans_graph, "humans_graph.gml")
     # compute_graph_stats(humans_graph)
 
-    bots_graph = create_network("", dataset_list[2:4])
-    nx.write_gml(bots_graph, 'bots_graph.gml')
+    # bots_graph = create_network("", dataset_list[2:4])
+    # convert_graph_to_gml(bots_graph, "bots_graph.gml")
     # compute_graph_stats(bots_graph)
