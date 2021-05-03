@@ -34,13 +34,12 @@ def compute_network_stats(G):
     degree_distribution(G)
 
 
-
 def load_data_gml(filepath):
     G = nk.readGraph(filepath, nk.Format.GML)
     nodes = G.numberOfNodes()
     edges = G.numberOfEdges()
     
-    print("#nodes = %d, edges = %d"%(nodes, edges))
+    print("No of nodes = %d\n No of edges = %d"%(nodes, edges))
     return G
 
 
@@ -56,4 +55,3 @@ if __name__ == '__main__':
 
     G = load_data_gml(args.inputfile)
     compute_network_stats(G)
-    

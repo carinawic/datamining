@@ -208,7 +208,7 @@ def generate_network(dataset, **kwargs):
         targets = edges['target_id']
         users = pd.concat([sources, targets]).drop_duplicates().reset_index(drop=True)
 
-    print(f'No of vertices {users.shape[0]}')
+    print(f'No of nodes {users.shape[0]}')
     print(f'No of edges {edges.shape[0]}')
     G = generate_directed_network(edges)
     
