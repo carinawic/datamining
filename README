@@ -1,0 +1,8 @@
+run: python3 get_metadata.py -i input.txt -o hydrated_tweets -k api_key.json
+
+-i - specifies the input file, supports :txt, tsv, csv
+-o - output file
+-k - specifies the file which holds the api keys in a json format
+
+The script has many intermediaries step to optimize the process, it usually makes requests in batches of 100
+If you modify something in processing please delete everyhing from the output before running the script again
