@@ -1,5 +1,6 @@
 import pandas as pd
 import networkx as nx
+import networkit as nk
 import pickle
 import matplotlib.pyplot as plt
 
@@ -109,15 +110,15 @@ def create_network(type, dataset_list):
                 edges = edges.append(temp_edges_followers, ignore_index=True)
                 edges = edges.append(temp_edges_friends, ignore_index=True)
 
+    edges.drop_duplicates().reset_index(drop=True)
     # egdes = remove_outsiders(users, edges)
-    print(f'No of vertices {users.shape[0]}')
-    print(f'No of edges {edges.shape[0]}')
 
     # export data in csv format
     # users[["id", "dataset"]].to_csv("all_users.csv", index=False, header=True)
     # new_edges.to_csv("edges.csv", index=False, header=True)
 
     G = generate_directed_network(edges)
+    print(f'Number of nodes {G.number_of_nodes()}\nNumber of edges {G.number_of_edges()}')
     # save_pickle(G, "graph.pickle")
 
     return G
@@ -199,7 +200,8 @@ def generate_network(dataset, **kwargs):
     else:
         # create a network with both friends and followers
         friends = pd.read_csv("data/{}/{}.csv".format(dataset, 'friends'), header=0, dtype=int)
-        followers = pd.read_csv("data/{}/{}.csv".format(dataset, 'followers'), header=0, dtype=int)    
+        followers = pd.read_csv("data/{}/{}.csv".format(dataset, 'followers'), header=0, dtype=int)
+        # drop duplicates might be redundant    
         edges = pd.concat([friends, followers]).drop_duplicates().reset_index(drop=True)
         save_edges_csv(dataset, edges, 'all')
         sources = edges['source_id']
@@ -222,14 +224,13 @@ def analyse_each_dataset():
         G = generate_network(dataset, type='followers')
         compute_graph_stats(G)
 
-
 if __name__ == '__main__':
     # G = create_network("friends", dataset_list)
-    # compute_graph_stats(G)
-    # draw_directed_graph(G)
-    # analyse_each_dataset()
-    humans_graph = create_network("", dataset_list[0:2])
-    compute_graph_stats(humans_graph)
+
+    # humans_graph = create_network("", dataset_list[0:2])
+    # nx.write_gml(humans_graph, 'humans_graph.gml')
+    # compute_graph_stats(humans_graph)
 
     bots_graph = create_network("", dataset_list[2:4])
-    compute_graph_stats(bots_graph)
+    nx.write_gml(bots_graph, 'bots_graph.gml')
+    # compute_graph_stats(bots_graph)
