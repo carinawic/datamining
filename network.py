@@ -1,9 +1,10 @@
+import csv
 import pandas as pd
 import networkx as nx
 import pickle
 import matplotlib.pyplot as plt
 
-dataset_list = ["E13", "FSF", "INT", "TFP", "TWT"]
+dataset_list = ["E13_real", "FSF_bot", "INT_bot", "TFP_real", "TWT_bot"]
 
 
 def remove_outsiders(user_df, edge_df):
@@ -63,6 +64,11 @@ def read_pickle(filename):
     return opened_object
 
 
+def export_for_gephi(users, edges, type):
+    edges.to_csv("{}_data.csv".format(type), index=False, quoting=csv.QUOTE_NONNUMERIC)
+    users.to_csv("user_data.csv", sep=" ", index=False, quoting=csv.QUOTE_NONNUMERIC, columns=["id", "label"])
+
+
 def create_network(type):
     """
     Function to generate and save a networkx graph
@@ -86,28 +92,31 @@ def create_network(type):
 
     if not users_exist:
         users = pd.read_csv("data/{}/users.csv".format(dataset_list[0]), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
+        users["label"] = dataset_list[0]
         for dataset in dataset_list[1:]:
             temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
-            temp_users["dataset_name"] = dataset
+            temp_users["label"] = dataset
             users = users.append(temp_users, ignore_index=True)
             users.append(temp_users, ignore_index=True)
         #save_pickle(users, "users_df.pickle")
 
     if not edges_exist:
         edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int)
+        #edges["label"] = dataset_list[0] # To save the dataset label of the edges
+
         for dataset in dataset_list[1:]:
             temp_edges = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int)
+            #temp_edges["label"] = dataset # To save the dataset label of the edges
             edges = edges.append(temp_edges, ignore_index=True)
         #save_pickle(edges, "{}_edges_df.pickle".format(type))
 
     new_edges = remove_outsiders(users, edges)
+    export_for_gephi(users, new_edges, type)
 
     G = generate_directed_network(new_edges)
-    #save_pickle(G, "graph.pickle")
-
     return G
 
 
 if __name__ == '__main__':
-    G = create_network("friends")
-    draw_directed_graph(G)    #draw_directed_graph(G)
+    G = create_network("followers")
+    #draw_directed_graph(G)
