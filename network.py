@@ -69,6 +69,18 @@ def export_for_gephi(users, edges, type):
     users.to_csv("user_data.csv", sep=" ", index=False, quoting=csv.QUOTE_NONNUMERIC, columns=["id", "label"])
 
 
+def export_for_getting_metatata(type):
+    users_contacts = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int, usecols=[1])
+    for dataset in dataset_list[1:]:
+        temp_contacts = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int, usecols=[1])
+        users_contacts = users_contacts.append(temp_contacts, ignore_index=True)
+    print(users_contacts.info())
+    users_contacts = users_contacts.drop_duplicates(subset=["target_id"], ignore_index=True)
+    print(users_contacts.info())
+    users_contacts.columns = ["user_id"]
+    users_contacts.to_csv("user_{}_data.csv".format(type), sep=",", index=False)
+
+
 def create_network(type):
     """
     Function to generate and save a networkx graph
@@ -118,5 +130,6 @@ def create_network(type):
 
 
 if __name__ == '__main__':
-    G = create_network("followers")
+    export_for_getting_metatata("friends")
+    #G = create_network("followers")
     #draw_directed_graph(G)
