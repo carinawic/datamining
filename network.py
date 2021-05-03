@@ -63,7 +63,7 @@ def read_pickle(filename):
     return opened_object
 
 
-def create_network(type, dataset_list):
+def create_network(type, keep_outsiders, dataset_list):
     """
     Function to generate and save a networkx graph
     :param type: 'friends' or 'followers' or empty string to combine both friend and followers edges
@@ -105,13 +105,14 @@ def create_network(type, dataset_list):
             edges_followers = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "followers"), header=0, dtype=int)
             edges = edges.append(edges_followers, ignore_index=True)
             for dataset in dataset_list[1:]:
-                temp_edges_friends = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "friends"), header=0, dtype=int)
-                temp_edges_followers = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "followers"), header=0, dtype=int)
+                temp_edges_friends = pd.read_csv("data/{}/{}.csv".format(dataset, "friends"), header=0, dtype=int)
+                temp_edges_followers = pd.read_csv("data/{}/{}.csv".format(dataset, "followers"), header=0, dtype=int)
                 edges = edges.append(temp_edges_followers, ignore_index=True)
                 edges = edges.append(temp_edges_friends, ignore_index=True)
 
-    edges.drop_duplicates().reset_index(drop=True)
-    # egdes = remove_outsiders(users, edges)
+    # edges.drop_duplicates().reset_index(drop=True)
+    if not keep_outsiders:
+        egdes = remove_outsiders(users, edges)
 
     # export data in csv format
     # users[["id", "dataset"]].to_csv("all_users.csv", index=False, header=True)
@@ -196,14 +197,14 @@ def generate_network(dataset, **kwargs):
         users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
         edges = pd.read_csv("data/{}/{}.csv".format(dataset, kwargs['type']), header=0, dtype=int)    
         edges = remove_outsiders(users, edges)
-        save_edges_csv(dataset, edges, kwargs['type'])
+        # save_edges_csv(dataset, edges, kwargs['type'])
     else:
         # create a network with both friends and followers
         friends = pd.read_csv("data/{}/{}.csv".format(dataset, 'friends'), header=0, dtype=int)
         followers = pd.read_csv("data/{}/{}.csv".format(dataset, 'followers'), header=0, dtype=int)
         # drop duplicates might be redundant    
         edges = pd.concat([friends, followers]).drop_duplicates().reset_index(drop=True)
-        save_edges_csv(dataset, edges, 'all')
+        # save_edges_csv(dataset, edges, 'all')
         sources = edges['source_id']
         targets = edges['target_id']
         users = pd.concat([sources, targets]).drop_duplicates().reset_index(drop=True)
@@ -229,12 +230,79 @@ def convert_graph_to_gml(G, filepath):
     nx.write_gml(G, filepath)
 
 if __name__ == '__main__':
-    # G = create_network("friends", dataset_list)
+    # all data sets merged
+    # print('merged_graph_friends_outsiders')
+    # G_outsiders = create_network("friends", True, dataset_list)
+    # convert_graph_to_gml(G_outsiders, "merged_graph_friends_outsiders.gml")
 
-    humans_graph = create_network("", dataset_list[0:2])
+    # print('merged_graph_friends')
+    # G = create_network("friends", False, dataset_list)
+    # convert_graph_to_gml(G, "merged_graph_friends.gml")
+
+    # print('merged_graph_followers_outsiders')
+    # G_outsiders = create_network("followers", True, dataset_list)
+    # convert_graph_to_gml(G_outsiders, "merged_graph_followers_outsiders.gml")
+
+    # print('merged_graph_followers')
+    # G = create_network("followers", False, dataset_list)
+    # convert_graph_to_gml(G, "merged_graph_followers.gml")
+
+    print('merged_graph_all_outsiders')
+    G = create_network("", True, dataset_list)
+    convert_graph_to_gml(G, "merged_graph_all_outsiders.gml")
+
+    print('merged_graph_all')
+    G = create_network("", False, dataset_list)
+    convert_graph_to_gml(G, "merged_graph_all.gml")
+
+    # only human data sets merged: TFP and E13
+    # print('humans_graph_friends_outsiders')
+    # humans_graph = create_network("friends", True, dataset_list[0:2])
+    # convert_graph_to_gml(humans_graph, "humans_graph_friends_outsiders.gml")
+
+    # print('humans_graph_friends')
+    # humans_graph = create_network("friends", False, dataset_list[0:2])
+    # convert_graph_to_gml(humans_graph, "humans_graph_friends.gml")
+
+    # print('humans_graph_followers_outsiders')
+    # humans_graph = create_network("followers", True, dataset_list[0:2])
+    # convert_graph_to_gml(humans_graph, "humans_graph_followers_outsiders.gml")
+
+    # print('humans_graph_followers')
+    # humans_graph = create_network("followers", False, dataset_list[0:2])
+    # convert_graph_to_gml(humans_graph, "humans_graph_followers.gml")
+
+    print('humans_graph_outsiders')
+    humans_graph = create_network("", True, dataset_list[0:2])
+    convert_graph_to_gml(humans_graph, "humans_graph_outsiders.gml")
+
+    print('humans_graph')
+    humans_graph = create_network("", False, dataset_list[0:2])
     convert_graph_to_gml(humans_graph, "humans_graph.gml")
-    # compute_graph_stats(humans_graph)
 
-    # bots_graph = create_network("", dataset_list[2:4])
-    # convert_graph_to_gml(bots_graph, "bots_graph.gml")
-    # compute_graph_stats(bots_graph)
+    # only bot data sets merged: TWT, INT and FSF
+    # print('bots_graph_friends_outsiders')
+    # bots_graph = create_network("friends", True, dataset_list[2:4])
+    # convert_graph_to_gml(bots_graph, "bots_graph_friends_outsiders.gml")
+
+    # print('bots_graph_friends')
+    # bots_graph = create_network("friends", False, dataset_list[2:4])
+    # convert_graph_to_gml(bots_graph, "bots_graph_friends.gml")
+
+    # print('bots_graph_followers_outsiders')
+    # bots_graph = create_network("followers", True, dataset_list[2:4])
+    # convert_graph_to_gml(bots_graph, "bots_graph_followers_outsiders.gml")
+
+    # print('bots_graph_followers')
+    # bots_graph = create_network("followers", False, dataset_list[2:4])
+    # convert_graph_to_gml(bots_graph, "bots_graph_followers.gml")
+
+    print('bots_graph_outsiders')
+    bots_graph = create_network("", True, dataset_list[2:4])
+    convert_graph_to_gml(bots_graph, "bots_graph_outsiders.gml")
+
+    print('bots_graph')
+    bots_graph = create_network("", False, dataset_list[2:4])
+    convert_graph_to_gml(bots_graph, "bots_graph.gml")
+
+
