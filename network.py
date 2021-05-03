@@ -1,11 +1,11 @@
 import csv
 import pandas as pd
 import networkx as nx
+import networkit as nk
 import pickle
 import matplotlib.pyplot as plt
 
-dataset_list = ["E13_real", "FSF_bot", "INT_bot", "TFP_real", "TWT_bot"]
-
+dataset_list = ["E13_real", "TFP_real", "FSF_bot", "INT_bot", "TWT_bot"]
 
 def remove_outsiders(user_df, edge_df):
     """
@@ -81,10 +81,11 @@ def export_for_getting_metatata(type):
     users_contacts.to_csv("user_{}_data.csv".format(type), sep=",", index=False)
 
 
-def create_network(type):
+def create_network(type, dataset_list):
     """
     Function to generate and save a networkx graph
-    :param type: 'friends' or 'followers'
+    :param type: 'friends' or 'followers' or empty string to combine both friend and followers edges
+    :param dataset_list: the datasets to be merged together
     :return: the networkx graph
     """
     users_exist = False
@@ -103,33 +104,156 @@ def create_network(type):
         print("No {} edges pickle exists".format(type))
 
     if not users_exist:
-        users = pd.read_csv("data/{}/users.csv".format(dataset_list[0]), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
+        users = pd.read_csv("data/{}/users.csv".format(dataset_list[0]), header=0, usecols=[0, 2, 3, 4, 5, 6, 7, 33])
         users["label"] = dataset_list[0]
         for dataset in dataset_list[1:]:
-            temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
+            temp_users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7, 33])
             temp_users["label"] = dataset
             users = users.append(temp_users, ignore_index=True)
-            users.append(temp_users, ignore_index=True)
-        #save_pickle(users, "users_df.pickle")
+        # save_pickle(users, "users_df.pickle")
 
     if not edges_exist:
-        edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int)
-        #edges["label"] = dataset_list[0] # To save the dataset label of the edges
+        if type:
+            edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], type), header=0, dtype=int)
+            for dataset in dataset_list[1:]:
+                temp_edges = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int)
+                edges = edges.append(temp_edges, ignore_index=True)
+                # print(f'edges size {edges.shape[0]}')
+                # save_pickle(edges, "{}_edges_df.pickle".format(type))
+        else:
+            edges = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "friends"), header=0, dtype=int)
+            edges_followers = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "followers"), header=0, dtype=int)
+            edges = edges.append(edges_followers, ignore_index=True)
+            for dataset in dataset_list[1:]:
+                temp_edges_friends = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "friends"), header=0, dtype=int)
+                temp_edges_followers = pd.read_csv("data/{}/{}.csv".format(dataset_list[0], "followers"), header=0, dtype=int)
+                edges = edges.append(temp_edges_followers, ignore_index=True)
+                edges = edges.append(temp_edges_friends, ignore_index=True)
 
-        for dataset in dataset_list[1:]:
-            temp_edges = pd.read_csv("data/{}/{}.csv".format(dataset, type), header=0, dtype=int)
-            #temp_edges["label"] = dataset # To save the dataset label of the edges
-            edges = edges.append(temp_edges, ignore_index=True)
-        #save_pickle(edges, "{}_edges_df.pickle".format(type))
+    edges.drop_duplicates().reset_index(drop=True)
+    # egdes = remove_outsiders(users, edges)
 
-    new_edges = remove_outsiders(users, edges)
-    export_for_gephi(users, new_edges, type)
+    # export data in csv format
+    # users[["id", "dataset"]].to_csv("all_users.csv", index=False, header=True)
+    # new_edges.to_csv("edges.csv", index=False, header=True)
 
-    G = generate_directed_network(new_edges)
+    G = generate_directed_network(edges)
+    print(f'Number of nodes {G.number_of_nodes()}\nNumber of edges {G.number_of_edges()}')
+    # save_pickle(G, "graph.pickle")
+
     return G
 
 
+def explore_connectivity(directed_graph):
+    """
+    Function to study graph connectivity
+    :param directed_graph: the graph to be analysed
+    """
+    # strongly connected - contains a directed path from u to v AND a directed
+    # path from v to u for every pair of vertices u, v
+    print(f'Strong connectivity {nx.is_strongly_connected(directed_graph)}')
+    # print(f'No of SCCs {nx.number_strongly_connected_components(directed_graph)}')
+
+    # connected - contains a directed path from u to v OR a directed path from
+    # v to u for every pair of vertices u, v
+
+    # weakly connected - replacing all of G's directed edges with undirected 
+    # edges produces a connected (undirected) graph.
+    print(f'Weak connectivity {nx.is_weakly_connected(directed_graph)}')
+    # print(f'No of WCCs {nx.number_weakly_connected_components(directed_graph)}')
+
+    # number of giant components (how many nodes it contains)
+    # number of disconnected components
+
+
+def compute_graph_stats(directed_graph):
+    """
+    Function to compute graph properties
+    :param directed_graph: the graph to be analysed
+    """
+    explore_connectivity(directed_graph)
+    # node degree power law distribution
+
+    # average in-degree and out-degree
+
+
+    # diameter
+    # output: Found infinite path length because the graph is not connected
+    # print(f'Graph diameter {nx.diameter(directed_graph.to_undirected())}')
+
+    # clustering coefficent
+    print(f'Clustering coefficent {nx.average_clustering(directed_graph)}')
+    
+    # eigenvector centrality
+
+
+def clustering_alg(directed_graph):
+    # run a clustering algorithm
+    return
+
+
+# functions used when analysing each dataset individually
+def save_edges_csv(dataset, edges_df, type):
+    """
+    Function to save a pandas dataframe of edges to a csv file
+    :param dataset: the name of the dataset
+    :edges_df: the pandas dataframe of edges
+    :type: the type of the edges which can be 'friends', 'followers' or both described as 'all'
+    """
+    edges_df.to_csv ("data/{}/{}_{}_new_edges.csv".format(dataset, dataset, type), index=False, header=True)
+
+
+def generate_network(dataset, **kwargs):
+    """
+    Function to generate a graph from a dataset
+    :dataset: the dataset for generating the graph
+    :**kwargs: if specified, type describes which edges to consider ('friends' or 'followers'), otherwise
+    all edges are considered when constructiong the graph
+    :return: the networkx graph
+    """
+    # create a network with the friends or the followers of users in a dataset
+    if 'type' in kwargs:
+        users = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 2, 3, 4, 5, 6, 7])
+        edges = pd.read_csv("data/{}/{}.csv".format(dataset, kwargs['type']), header=0, dtype=int)    
+        edges = remove_outsiders(users, edges)
+        save_edges_csv(dataset, edges, kwargs['type'])
+    else:
+        # create a network with both friends and followers
+        friends = pd.read_csv("data/{}/{}.csv".format(dataset, 'friends'), header=0, dtype=int)
+        followers = pd.read_csv("data/{}/{}.csv".format(dataset, 'followers'), header=0, dtype=int)
+        # drop duplicates might be redundant    
+        edges = pd.concat([friends, followers]).drop_duplicates().reset_index(drop=True)
+        save_edges_csv(dataset, edges, 'all')
+        sources = edges['source_id']
+        targets = edges['target_id']
+        users = pd.concat([sources, targets]).drop_duplicates().reset_index(drop=True)
+
+    print(f'No of nodes {users.shape[0]}')
+    print(f'No of edges {edges.shape[0]}')
+    G = generate_directed_network(edges)
+    
+    return G
+
+
+def analyse_each_dataset():
+    """
+    Function to generate and analyse the graph resulting from each of the five datasets
+    """
+    for dataset in dataset_list:
+        print(f'>>>>>>>>>>>> {dataset} <<<<<<<<<<<<')
+        G = generate_network(dataset, type='followers')
+        compute_graph_stats(G)
+
 if __name__ == '__main__':
-    export_for_getting_metatata("friends")
+    #export_for_getting_metatata("friends")
     #G = create_network("followers")
     #draw_directed_graph(G)
+    # G = create_network("friends", dataset_list)
+
+    # humans_graph = create_network("", dataset_list[0:2])
+    # nx.write_gml(humans_graph, 'humans_graph.gml')
+    # compute_graph_stats(humans_graph)
+
+    bots_graph = create_network("", dataset_list[2:4])
+    nx.write_gml(bots_graph, 'bots_graph.gml')
+    # compute_graph_stats(bots_graph)
