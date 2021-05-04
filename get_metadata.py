@@ -111,7 +111,7 @@ def main():
     elif '.csv' in args.inputfile:
         inputfile_data = pd.read_csv(args.inputfile)
     elif '.txt' in args.inputfile:
-        inputfile_data = pd.read_csv(args.inputfile, sep='\n', header=None, names= ['user_id'] )
+        inputfile_data = pd.read_csv(args.inputfile, sep='[ \n]', header=None, names= ['user_id', 'type'], engine="python")
     
     if not isinstance(args.idcolumn, type(None)):
         inputfile_data = inputfile_data.set_index(args.idcolumn)
@@ -135,7 +135,6 @@ def main():
                 f.seek(-2, os.SEEK_CUR)
             last_line = f.readline().decode()
         last_user = json.loads(last_line)
-        
         start = ids.index(last_user['id'])
         end = start+100
         i = int(math.ceil(float(limit-start) / 100))
@@ -161,6 +160,7 @@ def main():
                         backOffCounter += 1  # increase backoff
                         continue
                 for user in users:
+                    user._json['type'] = inputfile_data.at[user._json['id'], 'type']
                     json.dump(user._json, outfile)
                     outfile.write('\n')
     except:
@@ -180,6 +180,7 @@ def main():
                 data = json.loads(user) 
                 t = {
                     "user_id": data["id"],
+                    "type": data["type"],
                     "followers_count": data["followers_count"],
                     "friends_count": data["friends_count"]
                 }
@@ -188,14 +189,12 @@ def main():
         
     f = csv.writer(open('{}.csv'.format(output_file_noformat), 'w'))
     print('creating CSV version of minimized json master file') 
-    fields = ["user_id", "followers_count", "friends_count"]
+    fields = ["user_id", "type", "followers_count", "friends_count"]
     f.writerow(fields)       
     with open(output_file_short) as master_file:
         for user in master_file:
             data = json.loads(user)
-            f.writerow([data["user_id"], data["followers_count"], data["friends_count"]])
-    """
-    benford(output_file_short)
+            f.writerow([data["user_id"], data["type"], data["followers_count"], data["friends_count"]])
     
 
 # main invoked here    
