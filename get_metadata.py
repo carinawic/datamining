@@ -29,6 +29,8 @@ import pandas as pd
 from tweepy import TweepError
 from time import sleep
 
+# output_file_short is a file containing items like
+# {"user_id": 286543, "followers_count": 1185, "friends_count": 867}
 def benford(output_file_short):
     
     benfords_probs = {
@@ -45,6 +47,7 @@ def benford(output_file_short):
 
     d = dict()
     total_num_values = 0
+    total_percentage_diff = 0
 
     with open(output_file_short) as master_file:
         for user in master_file:
@@ -63,6 +66,11 @@ def benford(output_file_short):
 
     for key in list(d.keys()):
         print(f'{key} occured {d[key]} times out of {total_num_values} => {d[key]/total_num_values*100}% which should be {benfords_probs[key]}% => we are off by {d[key]/total_num_values*100 - benfords_probs[key]:.1f} %')
+        
+        total_percentage_diff += d[key]/total_num_values*100 - benfords_probs[key]
+
+    return 1/(total_percentage_diff/total_num_values)
+
 
 
 
