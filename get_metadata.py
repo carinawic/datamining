@@ -28,48 +28,6 @@ import pandas as pd
 from tweepy import TweepError
 from time import sleep
 
-# output_file_short is a file containing items like
-# {"user_id": 286543, "followers_count": 1185, "friends_count": 867}
-def benford(output_file_short):
-    
-    benfords_probs = {
-        1 : 30.1,
-        2 : 17.6,
-        3 : 12.5,
-        4 : 9.7,
-        5 : 7.9,
-        6 : 6.7,
-        7 : 5.8,
-        8 : 5.1,
-        9 : 4.6
-    }
-
-    d = dict()
-    total_num_values = 0
-    total_percentage_diff = 0
-
-    with open(output_file_short) as master_file:
-        for user in master_file:
-            data = json.loads(user)
-
-            first_digit = (int(str(data["friends_count"])[:1]))
-            
-            if first_digit in d:
-                # Increment count of word by 1
-                d[first_digit] = d[first_digit] + 1
-            else:
-                # Add the word to dictionary with count 1
-                d[first_digit] = 1
-            
-            total_num_values += 1
-
-    for key in list(d.keys()):
-        print(f'{key} occured {d[key]} times out of {total_num_values} => {d[key]/total_num_values*100}% which should be {benfords_probs[key]}% => we are off by {d[key]/total_num_values*100 - benfords_probs[key]:.1f} %')
-        
-        total_percentage_diff += d[key]/total_num_values*100 - benfords_probs[key]
-
-    return 1/(total_percentage_diff/total_num_values)
-
 
 def main():
     parser = argparse.ArgumentParser()
