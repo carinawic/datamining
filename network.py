@@ -125,54 +125,6 @@ def create_network(type, keep_outsiders, dataset_list):
     return G
 
 
-def explore_connectivity(directed_graph):
-    """
-    Function to study graph connectivity
-    :param directed_graph: the graph to be analysed
-    """
-    # strongly connected - contains a directed path from u to v AND a directed
-    # path from v to u for every pair of vertices u, v
-    print(f'Strong connectivity {nx.is_strongly_connected(directed_graph)}')
-    # print(f'No of SCCs {nx.number_strongly_connected_components(directed_graph)}')
-
-    # connected - contains a directed path from u to v OR a directed path from
-    # v to u for every pair of vertices u, v
-
-    # weakly connected - replacing all of G's directed edges with undirected 
-    # edges produces a connected (undirected) graph.
-    print(f'Weak connectivity {nx.is_weakly_connected(directed_graph)}')
-    # print(f'No of WCCs {nx.number_weakly_connected_components(directed_graph)}')
-
-    # number of giant components (how many nodes it contains)
-    # number of disconnected components
-
-
-def compute_graph_stats(directed_graph):
-    """
-    Function to compute graph properties
-    :param directed_graph: the graph to be analysed
-    """
-    explore_connectivity(directed_graph)
-    # node degree power law distribution
-
-    # average in-degree and out-degree
-
-
-    # diameter
-    # output: Found infinite path length because the graph is not connected
-    # print(f'Graph diameter {nx.diameter(directed_graph.to_undirected())}')
-
-    # clustering coefficent
-    print(f'Clustering coefficent {nx.average_clustering(directed_graph)}')
-    
-    # eigenvector centrality
-
-
-def clustering_alg(directed_graph):
-    # run a clustering algorithm
-    return
-
-
 # functions used when analysing each dataset individually
 def save_edges_csv(dataset, edges_df, type):
     """
@@ -216,37 +168,11 @@ def generate_network(dataset, **kwargs):
     return G
 
 
-def analyse_each_dataset():
-    """
-    Function to generate and analyse the graph resulting from each of the five datasets
-    """
-    for dataset in dataset_list:
-        print(f'>>>>>>>>>>>> {dataset} <<<<<<<<<<<<')
-        G = generate_network(dataset, type='followers')
-        compute_graph_stats(G)
-
-
 def convert_graph_to_gml(G, filepath):
     nx.write_gml(G, filepath)
 
+
 if __name__ == '__main__':
-    # all data sets merged
-    # print('merged_graph_friends_outsiders')
-    # G_outsiders = create_network("friends", True, dataset_list)
-    # convert_graph_to_gml(G_outsiders, "merged_graph_friends_outsiders.gml")
-
-    # print('merged_graph_friends')
-    # G = create_network("friends", False, dataset_list)
-    # convert_graph_to_gml(G, "merged_graph_friends.gml")
-
-    # print('merged_graph_followers_outsiders')
-    # G_outsiders = create_network("followers", True, dataset_list)
-    # convert_graph_to_gml(G_outsiders, "merged_graph_followers_outsiders.gml")
-
-    # print('merged_graph_followers')
-    # G = create_network("followers", False, dataset_list)
-    # convert_graph_to_gml(G, "merged_graph_followers.gml")
-
     print('merged_graph_all_outsiders')
     G = create_network("", True, dataset_list)
     convert_graph_to_gml(G, "merged_graph_all_outsiders.gml")
@@ -254,23 +180,6 @@ if __name__ == '__main__':
     print('merged_graph_all')
     G = create_network("", False, dataset_list)
     convert_graph_to_gml(G, "merged_graph_all.gml")
-
-    # only human data sets merged: TFP and E13
-    # print('humans_graph_friends_outsiders')
-    # humans_graph = create_network("friends", True, dataset_list[0:2])
-    # convert_graph_to_gml(humans_graph, "humans_graph_friends_outsiders.gml")
-
-    # print('humans_graph_friends')
-    # humans_graph = create_network("friends", False, dataset_list[0:2])
-    # convert_graph_to_gml(humans_graph, "humans_graph_friends.gml")
-
-    # print('humans_graph_followers_outsiders')
-    # humans_graph = create_network("followers", True, dataset_list[0:2])
-    # convert_graph_to_gml(humans_graph, "humans_graph_followers_outsiders.gml")
-
-    # print('humans_graph_followers')
-    # humans_graph = create_network("followers", False, dataset_list[0:2])
-    # convert_graph_to_gml(humans_graph, "humans_graph_followers.gml")
 
     print('humans_graph_outsiders')
     humans_graph = create_network("", True, dataset_list[0:2])
@@ -280,23 +189,6 @@ if __name__ == '__main__':
     humans_graph = create_network("", False, dataset_list[0:2])
     convert_graph_to_gml(humans_graph, "humans_graph.gml")
 
-    # only bot data sets merged: TWT, INT and FSF
-    # print('bots_graph_friends_outsiders')
-    # bots_graph = create_network("friends", True, dataset_list[2:4])
-    # convert_graph_to_gml(bots_graph, "bots_graph_friends_outsiders.gml")
-
-    # print('bots_graph_friends')
-    # bots_graph = create_network("friends", False, dataset_list[2:4])
-    # convert_graph_to_gml(bots_graph, "bots_graph_friends.gml")
-
-    # print('bots_graph_followers_outsiders')
-    # bots_graph = create_network("followers", True, dataset_list[2:4])
-    # convert_graph_to_gml(bots_graph, "bots_graph_followers_outsiders.gml")
-
-    # print('bots_graph_followers')
-    # bots_graph = create_network("followers", False, dataset_list[2:4])
-    # convert_graph_to_gml(bots_graph, "bots_graph_followers.gml")
-
     print('bots_graph_outsiders')
     bots_graph = create_network("", True, dataset_list[2:4])
     convert_graph_to_gml(bots_graph, "bots_graph_outsiders.gml")
@@ -304,5 +196,3 @@ if __name__ == '__main__':
     print('bots_graph')
     bots_graph = create_network("", False, dataset_list[2:4])
     convert_graph_to_gml(bots_graph, "bots_graph.gml")
-
-
