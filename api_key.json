@@ -1,0 +1,6 @@
+{
+    "consumer_key": "<text>",
+    "consumer_secret": "<text>",
+    "access_token": "<text>",
+    "access_token_secret": "<text>"
+}
