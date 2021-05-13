@@ -127,13 +127,12 @@ def main():
                     outfile.write('\n')
     except:
         print('exception: continuing to zip the file')
-    """
+    
     print('creating ziped master json file')
     zf = zipfile.ZipFile('{}.zip'.format(output_file_noformat), mode='w')
     zf.write(output_file, compress_type=compression)
     zf.close()
-    """
-    """
+
     # This is where we pick what we want from the user
     print('creating minimized json master file')
     with open(output_file_short, 'w') as outfile:
@@ -142,7 +141,6 @@ def main():
                 data = json.loads(user)
                 t = {
                     "user_id": data["id"],
-                    "type": data["type"],
                     "followers_count": data["followers_count"],
                     "friends_count": data["friends_count"]
                 }
@@ -150,13 +148,13 @@ def main():
                 outfile.write('\n')
 
     f = csv.writer(open('{}.csv'.format(output_file_noformat), 'w'))
-    print('creating CSV version of minimized json master file') 
-    fields = ["user_id", "type", "followers_count", "friends_count"]
-    f.writerow(fields)       
+    print('creating CSV version of minimized json master file')
+    fields = ["user_id", "followers_count", "friends_count"]
+    f.writerow(fields)
     with open(output_file_short) as master_file:
         for user in master_file:
             data = json.loads(user)
-            f.writerow([data["user_id"], data["type"], data["followers_count"], data["friends_count"]])
+            f.writerow([data["user_id"], data["followers_count"], data["friends_count"]])
 
 
 # main invoked here    
