@@ -34,30 +34,37 @@ def benford_score_simple(first_digits_freq, total_num_values):
         print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
             which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
         
-        total_percentage_diff += first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]
+        total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
 
+    print("total_num_values", total_num_values)
+    print("total_percentage_diff", total_percentage_diff)
     return 1 / (total_percentage_diff / total_num_values)
 
 
 # output_file_short is a file containing items like
 # {"user_id": 286543, "followers_count": 1185, "friends_count": 867}
-def compute_benford_score(output_file_short, benford_score_type):
+def compute_benford_score(input_dict, benford_score_type):
     
     d = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
     total_num_values = 0
 
-    with open(output_file_short) as master_file:
-        for user in master_file:
-            data = json.loads(user)
-            first_digit = (int(str(data["friends_count"])[:1]))
-            # Increment count of word by 1
-            d[first_digit] = d[first_digit] + 1
-            total_num_values += 1
+    for friend in input_dict:
         
-        if benford_score_type == 'simple':
-            return benford_score_simple(d, total_num_values)
+        for friend_property in friend:
 
-        return benford_score_pearson(d)
+            friend_count = friend[friend_property]['friends_count']
+            
+            first_digit = (int(str(friend_count)[:1]))
+
+            # Increment count of word by 1
+            if(first_digit != 0):
+                d[first_digit] = d[first_digit] + 1
+                total_num_values += 1
+        
+    if benford_score_type == 'simple':
+        return benford_score_simple(d, total_num_values)
+
+    return benford_score_pearson(d)
 
 
 def classifier():
@@ -109,4 +116,28 @@ def classifier():
     print("actual:", test_labels[0])
     '''
 
-compute_benford_score('hydrated_tweets_short.json', 'pearson')
+    
+def calculate_benford_for_each_user():
+        
+    with open("final_data.json") as json_file:
+            
+        for content in json_file: # there is only 1
+                
+            users = json.loads(content)
+                
+            # each user who will have a unique benford's score
+            for user in users:
+
+                # ['friends'] returns the list of such elements:
+                # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
+                friendproperties = (users[user]['friends'])
+                benford_degree = compute_benford_score(friendproperties, 'simple')
+                print("user", user)
+                print("has benford degree", benford_degree)
+                break # <-- remove this break if we want to run for all users
+
+                    
+
+                
+
+calculate_benford_for_each_user()
