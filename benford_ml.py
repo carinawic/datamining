@@ -1,8 +1,9 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense
+import matplotlib.pyplot as plt
 import json
-
+import csv
 
 labels = []
 combined_data = []
@@ -30,15 +31,20 @@ def benford_score_pearson(first_digits_freq):
 def benford_score_simple(first_digits_freq, total_num_values):
     total_percentage_diff = 0
 
-    for key in list(first_digits_freq.keys()):
-        print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
-            which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
+    if total_num_values!=0:
+        for key in list(first_digits_freq.keys()):
+        #print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
+        #which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
         
-        total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
+        
+            total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
 
-    print("total_num_values", total_num_values)
-    print("total_percentage_diff", total_percentage_diff)
-    return 1 / (total_percentage_diff / total_num_values)
+            #print("total_num_values", total_num_values)
+            #print("total_percentage_diff", total_percentage_diff)
+            return total_percentage_diff / total_num_values
+        
+    return -1
+    
 
 
 # output_file_short is a file containing items like
@@ -116,9 +122,41 @@ def classifier():
     print("actual:", test_labels[0])
     '''
 
-    
+
 def calculate_benford_for_each_user():
         
+    # building a lookup table where we can input a user and see if real or fake
+    with open("all_users.csv") as csvfile:
+            
+        real_or_fake_dict = {}
+        for content in csvfile: 
+            spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            for row in spamreader:
+                #row[0] is id, row[1] is real or fake
+                if(row[1].find("bot")>0):
+                    real_or_fake_dict[row[0]] = "bot"
+                else:
+                    real_or_fake_dict[row[0]] = "real"
+        
+        # just checking how many bots vs real users we have
+        botcounter = 0
+        realcounter = 0
+
+        for key in real_or_fake_dict:
+            if real_or_fake_dict[key] == "bot":
+                botcounter = botcounter + 1
+            else:
+                realcounter = realcounter + 1
+
+        print("amount of real users: ", realcounter)
+        print("amount of bots: ", botcounter)
+
+    #separating the users to plot them in different colors later
+    fakeuserbenford = []
+    realuserbenford = []
+    fakeusers = []
+    realusers = []
+
     with open("final_data.json") as json_file:
             
         for content in json_file: # there is only 1
@@ -131,13 +169,24 @@ def calculate_benford_for_each_user():
                 # ['friends'] returns the list of such elements:
                 # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
                 friendproperties = (users[user]['friends'])
-                benford_degree = compute_benford_score(friendproperties, 'simple')
+                benford_degree = compute_benford_score(friendproperties, 'pearson')
                 print("user", user)
                 print("has benford degree", benford_degree)
-                break # <-- remove this break if we want to run for all users
 
-                    
+                # filling our lists that we want to plot
+                if user in real_or_fake_dict:
+                    if real_or_fake_dict[user] == "bot":
+                        fakeusers.append(user)
+                        fakeuserbenford.append(benford_degree)
+                    else:
+                        realusers.append(user)
+                        realuserbenford.append(benford_degree)               
 
-                
+                #break # <-- remove this break if we want to run for all users
+    
+    #plotting users
+    plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
+    plt.plot(realusers, realuserbenford, color='green', marker='o')
+    plt.show()
 
 calculate_benford_for_each_user()
