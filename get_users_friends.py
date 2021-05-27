@@ -63,8 +63,9 @@ def main():
     try:
         with open(output_file, 'w') as outfile:
             outfile.write("source_id, target_id\n")
-            back_off_counter = 1
             for user in ids:
+                sleep(6)  # needed to prevent hitting API rate limit
+                back_off_counter = 1
                 while True:
                     try:
                         print(user)
