@@ -78,7 +78,7 @@ def compute_benford_score(input_dict, benford_score_method):
                 dict[first_digit] = dict[first_digit] + 1
                 total_num_values += 1
     
-    # convert the freq to procentages
+    # convert the freq to precentages
     fdf_array = []
     for v in list(dict.values()):
         fdf_array.append(v / total_num_values * 100)
@@ -212,9 +212,9 @@ def calculate_benford_for_each_user():
                 if len(friendproperties) < 100:
                     # print(f'friendproperties len {len(friendproperties)}')
                     continue
-                benford_degree = compute_benford_score(friendproperties, 'pearson')
-                # print("user", user)
-                # print("has benford degree", benford_degree)
+                benford_degree = compute_benford_score(friendproperties, 'chi-square')
+                print("user", user)
+                print("has benford degree", benford_degree)
 
                 # filling our lists that we want to plot
                 if user in real_or_fake_dict:
@@ -225,9 +225,9 @@ def calculate_benford_for_each_user():
                         realusers.append(user)
                         realuserbenford.append(benford_degree)               
 
-                # n = n + 1
-                # if n == 10:
-                #     break
+                n = n + 1
+                if n == 10:
+                    break
     
     #plotting users
     plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
