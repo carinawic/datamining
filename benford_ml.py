@@ -22,7 +22,7 @@ benfords_probs = {
     9 : 4.6
 }
 
-benford_probs_array = np.array(list(benfords_probs.values()))
+benford_probs_array = list(benfords_probs.values())
 
 # the two methods retaurn the same chi square value
 def chisq_stat(o, e):
@@ -31,8 +31,8 @@ def chisq_stat(o, e):
 
 def benford_score_chisquare(fdf_array):
     # ddof = no of categories - 1
-    chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array, ddof=8)
-    print(f'p = {p}')
+    chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array)
+    # print(f'chisq = {chisq}')
     return p
 
 
@@ -66,17 +66,15 @@ def compute_benford_score(input_dict, benford_score_method):
     dict = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
     total_num_values = 0
 
+    
     for friend in input_dict:
-        
-        for friend_property in friend:
+        friend_count = input_dict[friend]['friends_count']
+        first_digit = (int(str(friend_count)[:1]))
 
-            friend_count = friend[friend_property]['friends_count']
-            first_digit = (int(str(friend_count)[:1]))
-
-            # Increment count of word by 1
-            if(first_digit != 0):
-                dict[first_digit] = dict[first_digit] + 1
-                total_num_values += 1
+        # Increment count of word by 1
+        if(first_digit != 0):
+            dict[first_digit] = dict[first_digit] + 1
+            total_num_values += 1
     
     # convert the freq to precentages
     fdf_array = []
@@ -196,7 +194,7 @@ def calculate_benford_for_each_user():
     fakeusers = []
     realusers = []
 
-    with open("final_data.json") as json_file:
+    with open("final_data_v2.json") as json_file:
             
         for content in json_file: # there is only 1
                 
@@ -212,9 +210,10 @@ def calculate_benford_for_each_user():
                 if len(friendproperties) < 100:
                     # print(f'friendproperties len {len(friendproperties)}')
                     continue
+
                 benford_degree = compute_benford_score(friendproperties, 'chi-square')
-                print("user", user)
-                print("has benford degree", benford_degree)
+                # print("user", user)
+                # print("has benford degree", benford_degree)
 
                 # filling our lists that we want to plot
                 if user in real_or_fake_dict:
@@ -225,11 +224,14 @@ def calculate_benford_for_each_user():
                         realusers.append(user)
                         realuserbenford.append(benford_degree)               
 
-                n = n + 1
-                if n == 10:
-                    break
-    
-    #plotting users
+                # n = n + 1
+                # if n == 10:
+                #     break
+
+    # plotting users
+    print("amount of real users: ", len(realusers))
+    print("amount of bots: ", len(fakeusers))
+
     plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
     plt.plot(realusers, realuserbenford, color='green', marker='o')
     plt.show()
