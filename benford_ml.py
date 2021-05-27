@@ -1,8 +1,10 @@
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense
+import matplotlib.pyplot as plt
 import json
 from scipy.stats import chisquare, chi2_contingency
+import csv
 
 
 labels = []
@@ -42,22 +44,26 @@ def benford_score_pearson(fdf_array):
 def benford_score_simple(first_digits_freq, total_num_values):
     total_percentage_diff = 0
 
-    for key in list(first_digits_freq.keys()):
-        print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
-            which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
+    if total_num_values!=0:
+        for key in list(first_digits_freq.keys()):
+        #print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
+        #which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
         
-        total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
+        
+            total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
 
-    print("total_num_values", total_num_values)
-    print("total_percentage_diff", total_percentage_diff)
-    return 1 / (total_percentage_diff / total_num_values)
+            #print("total_num_values", total_num_values)
+            #print("total_percentage_diff", total_percentage_diff)
+            return total_percentage_diff / total_num_values
+        
+    return -1    
 
 
 # output_file_short is a file containing items like
 # {"user_id": 286543, "followers_count": 1185, "friends_count": 867}
-def compute_benford_score(input_dict, benford_score_type):
+def compute_benford_score(input_dict, benford_score_method):
     
-    d = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
+    dict = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
     total_num_values = 0
 
     for friend in input_dict:
@@ -65,29 +71,44 @@ def compute_benford_score(input_dict, benford_score_type):
         for friend_property in friend:
 
             friend_count = friend[friend_property]['friends_count']
-            
             first_digit = (int(str(friend_count)[:1]))
 
             # Increment count of word by 1
             if(first_digit != 0):
-                d[first_digit] = d[first_digit] + 1
+                dict[first_digit] = dict[first_digit] + 1
                 total_num_values += 1
     
-    if benford_score_type == 'simple':
-        return benford_score_simple(d, total_num_values)
-
     # convert the freq to procentages
     fdf_array = []
-    for v in list(d.values()):
+    for v in list(dict.values()):
         fdf_array.append(v / total_num_values * 100)
+    # print(fdf_array)
 
-    print(fdf_array)
-    print(f'{chisq_stat(fdf_array, benford_probs_array)}')
-    return benford_score_chisquare(fdf_array)
+    benford_score_func = {'simple': benford_score_simple, 
+                          'pearson': benford_score_pearson, 
+                          'chi-square': benford_score_chisquare}[benford_score_method]
 
+    return benford_score_func(fdf_array)
+
+
+class ProfileFeatures():
+    FF_RATIO = 0 # followers_count / friends_count
+    AGE = 1
+    NO_TWEETS = 2
+
+
+class ProfileFeaturesSwitch():
+    def FF_RATIO(self, user):
+        return user['followers_count'] / user['friends_count']
+
+    def AGE(self, user):
+        return 0
+
+    def NO_TWEETS(self, user):
+        return 0
 
 def compute_feature_vector(user, features):
-    f_vev = []
+    f_vec = []
     return f_vec
 
 
@@ -140,9 +161,41 @@ def classifier():
     print("actual:", test_labels[0])
     '''
 
-    
+
 def calculate_benford_for_each_user():
         
+    # building a lookup table where we can input a user and see if real or fake
+    with open("all_users.csv") as csvfile:
+            
+        real_or_fake_dict = {}
+        for content in csvfile: 
+            spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+            for row in spamreader:
+                #row[0] is id, row[1] is real or fake
+                if(row[1].find("bot")>0):
+                    real_or_fake_dict[row[0]] = "bot"
+                else:
+                    real_or_fake_dict[row[0]] = "real"
+        
+        # just checking how many bots vs real users we have
+        botcounter = 0
+        realcounter = 0
+
+        for key in real_or_fake_dict:
+            if real_or_fake_dict[key] == "bot":
+                botcounter = botcounter + 1
+            else:
+                realcounter = realcounter + 1
+
+        print("amount of real users: ", realcounter)
+        print("amount of bots: ", botcounter)
+
+    #separating the users to plot them in different colors later
+    fakeuserbenford = []
+    realuserbenford = []
+    fakeusers = []
+    realusers = []
+
     with open("final_data.json") as json_file:
             
         for content in json_file: # there is only 1
@@ -155,29 +208,31 @@ def calculate_benford_for_each_user():
                 # ['friends'] returns the list of such elements:
                 # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
                 friendproperties = (users[user]['friends'])
-                benford_degree = compute_benford_score(friendproperties, '')
-                print("user", user)
-                print("has benford degree", benford_degree)
-                # break # <-- remove this break if we want to run for all users
-                n = n + 1
-                if n == 10:
-                    break
+                # compute the benford score for accounts with more than 100 friends
+                if len(friendproperties) < 100:
+                    # print(f'friendproperties len {len(friendproperties)}')
+                    continue
+                benford_degree = compute_benford_score(friendproperties, 'pearson')
+                # print("user", user)
+                # print("has benford degree", benford_degree)
 
+                # filling our lists that we want to plot
+                if user in real_or_fake_dict:
+                    if real_or_fake_dict[user] == "bot":
+                        fakeusers.append(user)
+                        fakeuserbenford.append(benford_degree)
+                    else:
+                        realusers.append(user)
+                        realuserbenford.append(benford_degree)               
 
-class ProfileFeatures():
-    FF_RATIO = 0 # followers_count / friends_count
-    AGE = 1
-    NO_TWEETS = 2
+                # n = n + 1
+                # if n == 10:
+                #     break
+    
+    #plotting users
+    plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
+    plt.plot(realusers, realuserbenford, color='green', marker='o')
+    plt.show()
 
-
-class ProfileFeaturesSwitch():
-    def FF_RATIO(self, user):
-        return user['followers_count'] / user['friends_count']
-
-    def AGE(self, user):
-        return 0
-
-    def NO_TWEETS(self, user):
-        return 0
 
 calculate_benford_for_each_user()
