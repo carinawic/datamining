@@ -5,6 +5,7 @@ import pickle
 import matplotlib.pyplot as plt
 import argparse
 import powerlaw
+import csv
 
 
 def compute_diameter(G):
@@ -69,6 +70,37 @@ def compute_network_stats(G):
     compute_diameter(G)
 
 
+def compute_graph_features(G, input_file, output_file):
+    # compute betweenness centrality
+    btwn = nk.centrality.Betweenness(G, normalized=True).run()
+    print(btwn.score(84))
+
+    # compute local clustering coefficient
+    # if turbo is set to true, the running time is reduced significantly, but it requires
+    # O(m) additional memory - in practice, it should be a bit less than half of the memory
+    # that is needed for the graph itself
+    G_undirected = nk.graphtools.toUndirected(G)
+    G_undirected.removeSelfLoops()
+    lcc = nk.centrality.LocalClusteringCoefficient(G_undirected, turbo=True).run()
+    print(lcc.score(84))
+   
+    # compute node degree
+    d = nk.centrality.DegreeCentrality(G, normalized=True).run()
+    print(d.score(84))
+
+    # extract node lables since networkit doen't store additional info about nodes or edges
+    # temporary solution, might need to write ids to a file in network.py to save RAM
+    G_nx = nx.read_gml(input_file)
+    labels_list = list(G_nx.nodes)
+
+    # save results to a CSV file to be used as features for our classifier
+    f = csv.writer(open('{}.csv'.format(output_file), 'w'))
+    fields = ["used_id", "beetweenness_centrality", "local_clustering_coefficient", "node_degree"]
+    f.writerow(fields)
+    for u in G.iterNodes():
+        f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
+
+
 def load_data_gml(filepath):
     G = nk.readGraph(filepath, nk.Format.GML)
     nodes = G.numberOfNodes()
@@ -80,13 +112,20 @@ def load_data_gml(filepath):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", "--inputfile", help="Input file name")
+    parser.add_argument("-i", "--inputfile", help="Input file name in gml format")
+    parser.add_argument("-o", "--outputfile", help="Output file for graph features")
 
     args = parser.parse_args()
 
     if args.inputfile is None:
-        parser.error("please specify input file")
+        parser.error("Please specify input file")
+        exit()
+
+    if args.outputfile is None:
+        parser.error("Please specify output file")
         exit()
 
     G = load_data_gml(args.inputfile)
-    compute_network_stats(G)
+    nk.overview(G)
+    # compute_network_stats(G)
+    compute_graph_features(G, args.inputfile, args.outputfile)

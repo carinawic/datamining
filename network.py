@@ -81,7 +81,7 @@ def export_for_getting_metatata(type):
     users_contacts.to_csv("user_{}_data.csv".format(type), sep=",", index=False)
 
 
-def create_network(type, dataset_list):
+def create_network(type, keep_outsiders, dataset_list):
     """
     Function to generate and save a networkx graph
     :param type: 'friends' or 'followers' or empty string to combine both friend and followers edges
@@ -190,29 +190,8 @@ def generate_network(dataset, **kwargs):
 
 def convert_graph_to_gml(G, filepath):
     nx.write_gml(G, filepath)
-
+    # might need to write ids to a file in network.py to save RAM
 
 if __name__ == '__main__':
-    print('merged_graph_all_outsiders')
-    G = create_network("", True, dataset_list)
-    convert_graph_to_gml(G, "merged_graph_all_outsiders.gml")
-
-    print('merged_graph_all')
-    G = create_network("", False, dataset_list)
-    convert_graph_to_gml(G, "merged_graph_all.gml")
-
-    print('humans_graph_outsiders')
-    humans_graph = create_network("", True, dataset_list[0:2])
-    convert_graph_to_gml(humans_graph, "humans_graph_outsiders.gml")
-
-    print('humans_graph')
-    humans_graph = create_network("", False, dataset_list[0:2])
-    convert_graph_to_gml(humans_graph, "humans_graph.gml")
-
-    print('bots_graph_outsiders')
-    bots_graph = create_network("", True, dataset_list[2:4])
-    convert_graph_to_gml(bots_graph, "bots_graph_outsiders.gml")
-
-    print('bots_graph')
-    bots_graph = create_network("", False, dataset_list[2:4])
-    convert_graph_to_gml(bots_graph, "bots_graph.gml")
+    G = create_network("friends", False, dataset_list[1:2])
+    convert_graph_to_gml(G, "tfp_outsiders.gml")

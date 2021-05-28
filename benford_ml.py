@@ -3,7 +3,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 import matplotlib.pyplot as plt
 import json
-from scipy.stats import chisquare, chi2_contingency
+from scipy.stats import chisquare, chi2
 import csv
 
 
@@ -30,10 +30,10 @@ def chisq_stat(o, e):
 
 
 def benford_score_chisquare(fdf_array):
-    # ddof = no of categories - 1
+    # dof = no of categories - 1
     chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array)
     # print(f'chisq = {chisq}')
-    return p
+    return 1 - chi2.cdf(chisq, 8)
 
 
 def benford_score_pearson(fdf_array):
