@@ -140,3 +140,12 @@ def minimize_file(filename, new_filename):
         data = json.loads(user)
         f.writerow([data["user_id"], data["followers_count"], data["friends_count"]])
     file.close()
+
+
+def reverse_csv(infile, outfile):
+    with open(infile, "r") as file_in:
+        with open(outfile, "w") as file_out:
+            file_list = file_in.readlines()
+            file_out.write(file_list[0])
+            for row in reversed(list(file_list[1:])):
+                file_out.write(row)
