@@ -33,7 +33,7 @@ def benford_score_chisquare(fdf_array):
     # dof = no of categories - 1
     chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array)
     # print(f'chisq = {chisq}')
-    return 1 - chi2.cdf(chisq, 8)
+    return chisq
 
 
 def benford_score_pearson(fdf_array):
