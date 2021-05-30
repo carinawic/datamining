@@ -89,77 +89,6 @@ def compute_benford_score(input_dict, benford_score_method):
     return benford_score_func(fdf_array)
 
 
-class ProfileFeatures():
-    FF_RATIO = 0 # followers_count / friends_count
-    AGE = 1
-    NO_TWEETS = 2
-
-
-class ProfileFeaturesSwitch():
-    def FF_RATIO(self, user):
-        return user['followers_count'] / user['friends_count']
-
-    def AGE(self, user):
-        return 0
-
-    def NO_TWEETS(self, user):
-        return 0
-
-def compute_feature_vector(user, features):
-    f_vec = []
-    return f_vec
-
-
-def classifier():
-    with open("benford_input.txt", encoding="utf-8") as f:
-        
-        json_data = json.load(f)
-        for i in json_data["users"]:
-            labels.append(i["real"])
-            combined_data.append([i["benford_degree"], i["degree"], i["clustering"]])
-
-
-    combined_training_data = combined_data[:12]
-    combined_training_labels = labels[:12]
-    combined_test_data = combined_data[12:]
-    combined_test_labels = labels[12:]
-
-
-    # keras.Sequential groups a linear stack of layers into a Model
-    model = Sequential()
-    # dense layer: we narrow all our nodes into 16 nodes
-    # ReLU (Rectified Linear Unit) = f(x) = 0 until a certain x-value thereafter linear 
-    model.add(Dense(16, activation='relu', input_dim=3))
-    # last layer is 1 neuron with a value from a sigmoid function 
-    model.add(Dense(1, activation='sigmoid'))
-
-    # creating the model
-    model.compile(loss='mean_squared_error',
-                optimizer='adam',
-                metrics=['accuracy'])
-
-    # we try to fit our model to our training data
-    # epochs is the amount of training rounds
-    # verbose alters the terminal output type
-    model.fit(combined_training_data, combined_training_labels, epochs=500, verbose=2)
-
-    print("evaluating test data:")
-
-    # testing our network on the test data
-    test_results = model.evaluate(combined_test_data, combined_test_labels)
-    print(test_results)
-
-    '''
-    # printing a summary of the model
-    model.summary()
-
-    # making a prediction for a specific value:
-    predict = model.predict(test_data[0])
-    print("prediction:", predict[0])
-    print("actual:", test_labels[0])
-    '''
-
-
 def calculate_benford_for_each_user():
         
     # building a lookup table where we can input a user and see if real or fake
@@ -235,6 +164,56 @@ def calculate_benford_for_each_user():
     plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
     plt.plot(realusers, realuserbenford, color='green', marker='o')
     plt.show()
+
+
+def classifier():
+    with open("benford_input.txt", encoding="utf-8") as f:
+        
+        json_data = json.load(f)
+        for i in json_data["users"]:
+            labels.append(i["real"])
+            combined_data.append([i["benford_degree"], i["degree"], i["clustering"]])
+
+
+    combined_training_data = combined_data[:12]
+    combined_training_labels = labels[:12]
+    combined_test_data = combined_data[12:]
+    combined_test_labels = labels[12:]
+
+
+    # keras.Sequential groups a linear stack of layers into a Model
+    model = Sequential()
+    # dense layer: we narrow all our nodes into 16 nodes
+    # ReLU (Rectified Linear Unit) = f(x) = 0 until a certain x-value thereafter linear 
+    model.add(Dense(16, activation='relu', input_dim=3))
+    # last layer is 1 neuron with a value from a sigmoid function 
+    model.add(Dense(1, activation='sigmoid'))
+
+    # creating the model
+    model.compile(loss='mean_squared_error',
+                optimizer='adam',
+                metrics=['accuracy'])
+
+    # we try to fit our model to our training data
+    # epochs is the amount of training rounds
+    # verbose alters the terminal output type
+    model.fit(combined_training_data, combined_training_labels, epochs=500, verbose=2)
+
+    print("evaluating test data:")
+
+    # testing our network on the test data
+    test_results = model.evaluate(combined_test_data, combined_test_labels)
+    print(test_results)
+
+    '''
+    # printing a summary of the model
+    model.summary()
+
+    # making a prediction for a specific value:
+    predict = model.predict(test_data[0])
+    print("prediction:", predict[0])
+    print("actual:", test_labels[0])
+    '''
 
 
 calculate_benford_for_each_user()

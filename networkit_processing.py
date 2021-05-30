@@ -73,7 +73,6 @@ def compute_network_stats(G):
 def compute_graph_features(G, input_file, output_file):
     # compute betweenness centrality
     btwn = nk.centrality.Betweenness(G, normalized=True).run()
-    print(btwn.score(84))
 
     # compute local clustering coefficient
     # if turbo is set to true, the running time is reduced significantly, but it requires
@@ -82,11 +81,9 @@ def compute_graph_features(G, input_file, output_file):
     G_undirected = nk.graphtools.toUndirected(G)
     G_undirected.removeSelfLoops()
     lcc = nk.centrality.LocalClusteringCoefficient(G_undirected, turbo=True).run()
-    print(lcc.score(84))
    
     # compute node degree
     d = nk.centrality.DegreeCentrality(G, normalized=True).run()
-    print(d.score(84))
 
     # extract node lables since networkit doen't store additional info about nodes or edges
     # temporary solution, might need to write ids to a file in network.py to save RAM
@@ -95,7 +92,7 @@ def compute_graph_features(G, input_file, output_file):
 
     # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
-    fields = ["used_id", "beetweenness_centrality", "local_clustering_coefficient", "node_degree"]
+    fields = ["used_id", "beetweenness_centrality", "local_clustering_coefficient", "degree_centrality"]
     f.writerow(fields)
     for u in G.iterNodes():
         f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
