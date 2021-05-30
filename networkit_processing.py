@@ -70,7 +70,7 @@ def compute_network_stats(G):
     compute_diameter(G)
 
 
-def compute_graph_features(G, input_file, output_file):
+def compute_graph_features(G, dataset, input_file, output_file):
     # compute betweenness centrality
     btwn = nk.centrality.Betweenness(G, normalized=True).run()
 
@@ -90,12 +90,19 @@ def compute_graph_features(G, input_file, output_file):
     G_nx = nx.read_gml(input_file)
     labels_list = list(G_nx.nodes)
 
+    # get a list of user IDs
+    users = pd.read_csv(dataset, header=0, usecols=[0], converters={'id': str})
+    # conver the user IDs to a dictionary
+    ids_dict = dict.fromkeys(users['id'].to_list())
+
     # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
     fields = ["used_id", "beetweenness_centrality", "local_clustering_coefficient", "degree_centrality"]
     f.writerow(fields)
     for u in G.iterNodes():
-        f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
+        # output the values only for the users in users.csv
+        if labels_list[u] in ids_dict:
+            f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
 
 
 def load_data_gml(filepath):
@@ -111,6 +118,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--inputfile", help="Input file name in gml format")
     parser.add_argument("-o", "--outputfile", help="Output file for graph features")
+    parser.add_argument("-ids", "--idsfile", help="File to extract the user IDs from")
 
     args = parser.parse_args()
 
@@ -122,7 +130,11 @@ if __name__ == '__main__':
         parser.error("Please specify output file")
         exit()
 
+    if args.idsfile is None:
+        parser.error("Please specify file to extract user IDs from")
+        exit()
+
     G = load_data_gml(args.inputfile)
-    nk.overview(G)
+    # nk.overview(G)
     # compute_network_stats(G)
-    compute_graph_features(G, args.inputfile, args.outputfile)
+    compute_graph_features(G, args.idsfile, args.inputfile, args.outputfile)

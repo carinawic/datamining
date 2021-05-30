@@ -193,5 +193,5 @@ def convert_graph_to_gml(G, filepath):
     # might need to write ids to a file in network.py to save RAM
 
 if __name__ == '__main__':
-    G = create_network("friends", False, dataset_list[1:2])
-    convert_graph_to_gml(G, "tfp_outsiders.gml")
+    G = create_network("friends", True, dataset_list[1:2])
+    convert_graph_to_gml(G, "tfp.gml")
