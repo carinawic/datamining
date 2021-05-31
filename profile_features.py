@@ -94,6 +94,7 @@ pf_dict = {
     'has_bio': has_bio
 }
 
+
 features = ['id', 'ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
     'no_followers', 'following_rate', 'belongs_to_list',
     'location', 'has_bio']

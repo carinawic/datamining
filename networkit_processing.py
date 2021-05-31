@@ -93,7 +93,7 @@ def compute_graph_features(G, dataset, input_file, output_file):
     # get a list of user IDs
     users = pd.read_csv(dataset, header=0, usecols=[0], converters={'id': str})
     # conver the user IDs to a dictionary
-    ids_dict = dict.fromkeys(users['id'].to_list())
+    ids_list = users['id'].to_list()
 
     # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
@@ -101,7 +101,7 @@ def compute_graph_features(G, dataset, input_file, output_file):
     f.writerow(fields)
     for u in G.iterNodes():
         # output the values only for the users in users.csv
-        if labels_list[u] in ids_dict:
+        if labels_list[u] in ids_list:
             f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
 
 
