@@ -5,8 +5,11 @@ import matplotlib.pyplot as plt
 import json
 from scipy.stats import chisquare, chi2
 import csv
+import pandas as pd
+import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.model_selection import ShuffleSplit
+from sklearn.ensemble import RandomForestClassifier
 
 benfords_probs = {
     1 : 30.1,
@@ -191,42 +194,76 @@ def partition_shufflesplit(to_be_partitioned):
     ss = ShuffleSplit(n_splits=5, test_size=0.25, random_state=0)
     return ss.split(to_be_partitioned)
 
-def partition_with_regards_to_dataset(n):
+def partition_with_regards_to_dataset(profile_features_file, graph_features_file, n):
     
     training_data = []
     training_labels = []
     test_data = []
     test_labels = []
 
-    with open("benford_input.txt", encoding="utf-8") as f:
-        
-        json_data = json.load(f)
-        dataset = ""
-        counter = 0
+    dataset = ""
+    counter = 0
 
-        for i in json_data["users"]:
-
-            if dataset != i["dataset"]: # new dataset
-                counter = 0
-                
-            dataset = i["dataset"]
+    # read the profile features of each user
+    user_features = pd.read_csv(profile_features_file, header=0, usecols=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    for _, row in user_features.iterrows(): 
+        if dataset != row['dataset']: # new dataset
+            counter = 0          
             
-            # add the n first items of each dataset as test data
-            if counter < n:
-                test_labels.append(i["real"]) # i["real"] is 0 or 1
-                test_data.append([i["benford_degree"], i["degree"], i["clustering"]])
-            else:
-                training_labels.append(i["real"]) # i["real"] is 0 or 1
-                training_data.append([i["benford_degree"], i["degree"], i["clustering"]])
+        dataset = row['dataset']
+        user_type = row['real'] # row['real'][i] is 0 or 1
+        sample = [row['ff_ratio'], row['no_tweets'], row['profile_has_name'], \
+                row['no_friends'], row['no_followers'], row['following_rate'], \
+                row['belongs_to_list'], row['location'], row['has_bio']]
+        # add the n first items of each dataset as test data
+        if counter < n:
+            test_labels.append(user_type)
+            test_data.append(sample)
+        else:
+            training_labels.append(user_type)
+            training_data.append(sample)
 
-            counter = counter + 1
+        counter = counter + 1
 
-    return test_labels, test_data, training_labels, training_data
+    # read the graph features of each user
+
+    return  training_labels, training_data, test_labels, test_data
+
+
+def random_forest(feature_names):
+    train_l, train_f, test_l, test_f = partition_with_regards_to_dataset('profile_features.csv', '', 10)
+    # labels are the values we want to predict
+    labels = np.array(train_l)
+    # convert the features to numpy array
+    features = np.array(train_f)
+
+    # establish a baseline model
+
+    # instantiate model with 1000 decision trees
+    rf = RandomForestClassifier(n_estimators = 1000, random_state = 42)
+    # train the model on training data
+    rf.fit(features, labels)
+
+    # use the forest's predict method on the test data
+
+    predictions = rf.predict(np.array(test_f))
+    print('Predictions:', predictions)
+    print('Actual labels:', test_l)
+
+    # evaluate the peformance of the model
+    # count how many predictions were correct
+    correct_pred = 0
+    for i in range(predictions.shape[0]):
+        if predictions[i] == test_l[i]:
+            correct_pred = correct_pred + 1
+    print('Correct predictions ', correct_pred, 'out of ', len(test_l))
+
+    # calculate the errors
+    feature_imp = pd.Series(rf.feature_importances_,index=feature_names).sort_values(ascending=False)
+    print(feature_imp)
 
 
 def classifier():
-    
-
     # partition_with_regards_to_dataset(3)[0] 
     # will return the test_labels list, which contains the test_labels of the 3 first nodes in every dataset
     test_and_training_data = partition_with_regards_to_dataset(3) 
@@ -268,5 +305,6 @@ def classifier():
     print("actual:", test_labels[0])
     '''
 
-calculate_benford_for_each_user()
-classifier()
+feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+    'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
+random_forest(feature_names)

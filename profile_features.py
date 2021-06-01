@@ -1,5 +1,6 @@
 from datetime import date, datetime
 import csv
+import json
 import pandas as pd
 
 date_format = "%a %b %d %H:%M:%S %z %Y"
@@ -45,15 +46,11 @@ def following_rate(user):
 def default_profile_image(user):
     account_date = datetime. strptime(user['created_at'], date_format).replace(tzinfo=None)
     delta = datetime.now() - account_date
-    print(user['default_profile_image'])
-    # TODO: not sure about this feature, the field should be True, but it's acutually nan
-    # when I print it
     if user['default_profile_image'] and delta.days > months_threshold:
         return 1
     return 0
 
 
-# belongs to a list
 def belongs_to_list(user):
     if user['listed_count'] > 0:
         return 1
@@ -96,24 +93,27 @@ pf_dict = {
 
 
 features = ['id', 'ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-    'no_followers', 'following_rate', 'belongs_to_list',
-    'location', 'has_bio']
+    'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
 
 
-def compute_feature_vector(dataset, features, output_file):
-    # read only the columns needed for computing the features
-    # columns: name, statuses_count, followers_count, friends_count, listed_count
-    # crated_at, location, default_profile_image, description
-    users_df = pd.read_csv("data/{}/users.csv".format(dataset), header=0, usecols=[0, 1, 3, 4, 5, 7, 8, 12, 14, 31])
-
-     # save results to a CSV file to be used as features for our classifier
+def compute_feature_vector(input_file, features, output_file):
+    # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
-    f.writerow(features)
+    fields = features + ['dataset', 'real']
+    f.writerow(fields)
 
-    for _, user in users_df.iterrows():
-        f_vec = [user['id']]
-        for feature in features[1:]:
-            f_vec.append(pf_dict[feature](user))
-        f.writerow(f_vec)
+    with open(input_file, 'r') as infile:
+        for line in infile:
+            user = json.loads(line)
+            f_vec = [user['id_str']]
+            for feature in features[1:]:
+                f_vec.append(pf_dict[feature](user))
+            f_vec.append(user['type'][1:-1])
+            if "_real" in user['type']:
+                f_vec.append(1)
+            else:
+                f_vec.append(0)
+            f.writerow(f_vec)
 
-compute_feature_vector('TFP_real', features, 'profile_features')
+
+compute_feature_vector('data-valid-users/hydrated_tweets.json', features, 'profile_features')
