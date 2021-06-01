@@ -5,10 +5,8 @@ import matplotlib.pyplot as plt
 import json
 from scipy.stats import chisquare, chi2
 import csv
-
-
-labels = []
-combined_data = []
+from sklearn.model_selection import KFold
+from sklearn.model_selection import ShuffleSplit
 
 benfords_probs = {
     1 : 30.1,
@@ -90,7 +88,8 @@ def compute_benford_score(input_dict, benford_score_method):
 
 
 def calculate_benford_for_each_user():
-        
+    # this method is just for plotting now
+    
     # building a lookup table where we can input a user and see if real or fake
     with open("all_users.csv") as csvfile:
             
@@ -117,6 +116,7 @@ def calculate_benford_for_each_user():
         print("amount of real users: ", realcounter)
         print("amount of bots: ", botcounter)
 
+    
     #separating the users to plot them in different colors later
     fakeuserbenford = []
     realuserbenford = []
@@ -158,29 +158,81 @@ def calculate_benford_for_each_user():
                 #     break
 
     # plotting users
-    print("amount of real users: ", len(realusers))
-    print("amount of bots: ", len(fakeusers))
+    #print("amount of real users: ", len(realusers))
+    #print("amount of bots: ", len(fakeusers))
 
-    plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
-    plt.plot(realusers, realuserbenford, color='green', marker='o')
-    plt.show()
+    #plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
+    #plt.plot(realusers, realuserbenford, color='green', marker='o')
+    #plt.show()
 
+def partition_kfold(to_be_partitioned):
 
-def classifier():
+    # from: https://scikit-learn.org/stable/modules/cross_validation.html
+
+    # the size of the test set will be 1/K (i.e. 1/n_splits), 
+    # so you can tune that parameter to control the test size 
+    # (e.g. n_splits=3 will have test split of size 1/3 = 33% of your data
+    kf = KFold(n_splits=3)
+
+    '''
+    the return value partition_kfold(X) is iterable such as:
+
+    for train, test in partition_kfold(X):
+       print(train)
+       print(test)
+    '''
+
+    return kf.split(to_be_partitioned)
+
+def partition_shufflesplit(to_be_partitioned):
+    # from: https://scikit-learn.org/stable/modules/cross_validation.html
+
+    # here we specify a test size instead, and the test data is picked randomly from all over the total data
+    ss = ShuffleSplit(n_splits=5, test_size=0.25, random_state=0)
+    return ss.split(to_be_partitioned)
+
+def partition_with_regards_to_dataset(n):
+    
+    training_data = []
+    training_labels = []
+    test_data = []
+    test_labels = []
+
     with open("benford_input.txt", encoding="utf-8") as f:
         
         json_data = json.load(f)
+        dataset = ""
+        counter = 0
+
         for i in json_data["users"]:
-            labels.append(i["real"])
-            combined_data.append([i["benford_degree"], i["degree"], i["clustering"]])
+
+            if dataset != i["dataset"]: # new dataset
+                counter = 0
+                
+            dataset = i["dataset"]
+            
+            # add the n first items of each dataset as test data
+            if counter < n:
+                test_labels.append(i["real"]) # i["real"] is 0 or 1
+                test_data.append([i["benford_degree"], i["degree"], i["clustering"]])
+            else:
+                training_labels.append(i["real"]) # i["real"] is 0 or 1
+                training_data.append([i["benford_degree"], i["degree"], i["clustering"]])
+
+            counter = counter + 1
+
+    return test_labels, test_data, training_labels, training_data
 
 
-    combined_training_data = combined_data[:12]
-    combined_training_labels = labels[:12]
-    combined_test_data = combined_data[12:]
-    combined_test_labels = labels[12:]
+def classifier():
+    
 
+    # partition_with_regards_to_dataset(3)[0] 
+    # will return the test_labels list, which contains the test_labels of the 3 first nodes in every dataset
+    test_and_training_data = partition_with_regards_to_dataset(3) 
 
+    print(test_and_training_data[0])
+    
     # keras.Sequential groups a linear stack of layers into a Model
     model = Sequential()
     # dense layer: we narrow all our nodes into 16 nodes
@@ -197,13 +249,14 @@ def classifier():
     # we try to fit our model to our training data
     # epochs is the amount of training rounds
     # verbose alters the terminal output type
-    model.fit(combined_training_data, combined_training_labels, epochs=500, verbose=2)
+    model.fit(test_and_training_data[3], test_and_training_data[2], epochs=500, verbose=2)
 
     print("evaluating test data:")
 
     # testing our network on the test data
-    test_results = model.evaluate(combined_test_data, combined_test_labels)
+    test_results = model.evaluate(test_and_training_data[1], test_and_training_data[0])
     print(test_results)
+
 
     '''
     # printing a summary of the model
@@ -215,5 +268,5 @@ def classifier():
     print("actual:", test_labels[0])
     '''
 
-
 calculate_benford_for_each_user()
+classifier()
