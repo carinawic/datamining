@@ -200,7 +200,7 @@ def partition_shufflesplit(to_be_partitioned):
     return ss.split(to_be_partitioned)
 
 
-def partition_with_regards_to_dataset(profile_features_file, graph_features_file, n):
+def partition_with_regards_to_dataset(profile_features_file, graph_features_file, real_test, fake_test):
     
     x_train = [] # training data
     y_train = [] # training labels
@@ -208,7 +208,8 @@ def partition_with_regards_to_dataset(profile_features_file, graph_features_file
     y_test = [] # test labels
 
     dataset = ""
-    counter = 0
+    real_counter = 0
+    fake_counter = 0
 
     graph_features = False
     if graph_features_file:
@@ -220,10 +221,6 @@ def partition_with_regards_to_dataset(profile_features_file, graph_features_file
     # read the profile features of each user
     user_features = pd.read_csv(profile_features_file, header=0,  converters={'id': str})
     for _, row in user_features.iterrows(): 
-        if dataset != row['dataset']: # new dataset
-            counter = 0          
-            
-        dataset = row['dataset']
         user_type = row['real'] # row['real'][i] is 0 or 1
         sample = [row['ff_ratio'], row['no_tweets'], row['profile_has_name'], \
                 row['no_friends'], row['no_followers'], row['following_rate'], \
@@ -236,20 +233,26 @@ def partition_with_regards_to_dataset(profile_features_file, graph_features_file
             else:
                 sample += [0.0, 0.0, 0.0]
 
-        # add the n first items of each dataset as test data
-        if counter < n:
+        if row['real'] == 1:
+            if real_counter < real_test:
+                x_test.append(sample)
+                y_test.append(user_type)
+                real_counter = real_counter + 1
+            else:
+                x_train.append(sample)
+                y_train.append(user_type)
+        elif fake_counter < fake_test:
             x_test.append(sample)
             y_test.append(user_type)
+            fake_counter = fake_counter + 1
         else:
             x_train.append(sample)
-            y_train.append(user_type)
-
-        counter = counter + 1
+            y_train.append(user_type) 
 
     return  x_train, y_train, x_test, y_test
 
 
-def performance_metrics(classifier, y_test, y_pred):
+def performance_metrics(classifier, feature_names, y_test, y_pred):
     # evaluate the peformance of the model
     print('Confusion matrix ', confusion_matrix(y_test, y_pred))
     print(classification_report(y_test, y_pred))
@@ -261,6 +264,7 @@ def performance_metrics(classifier, y_test, y_pred):
 
 
 def random_forest(feature_names, x_train, y_train, x_test, y_test):
+    print(len(x_train), len(y_train), len(x_test), len(y_test))
     # scale the features
     sc = StandardScaler()
     x_train = sc.fit_transform(np.array(x_train))
@@ -274,7 +278,7 @@ def random_forest(feature_names, x_train, y_train, x_test, y_test):
     y_pred = rf.predict(x_test)
     # evaluate model
     print('RandomForestClassifier performance before tuning')
-    performance_metrics(rf, y_test, y_pred)
+    performance_metrics(rf, feature_names, y_test, y_pred)
 
     # hyperparameter tunning
     # number of trees in random forest
@@ -319,7 +323,7 @@ def random_forest(feature_names, x_train, y_train, x_test, y_test):
 
     y_pred = rf_best.predict(x_test)
     print('RandomForestClassifier performance after tuning')
-    performance_metrics(rf_best, y_test, y_pred)
+    performance_metrics(rf_best, feature_names, y_test, y_pred)
 
 
 def classifier():
@@ -368,10 +372,10 @@ if __name__ == '__main__':
     # classify based on profile features
     feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
     'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
-    x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 10)
+    x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 100, 100)
     random_forest(feature_names, x_train, y_train, x_test, y_test)
 
     # classify based on profile features + graph features
-    feature_names += ['beetweenness_centrality', 'local_clustering_coefficient', 'degree_centrality']
-    x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', 'graph_features.csv', 10)
-    random_forest(feature_names, x_train, y_train, x_test, y_test)
+    # feature_names += ['beetweenness_centrality', 'local_clustering_coefficient', 'degree_centrality']
+    # x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', 'graph_features.csv', 100, 100)
+    # random_forest(feature_names, x_train, y_train, x_test, y_test)
