@@ -369,9 +369,9 @@ if __name__ == '__main__':
     feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
     'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
     x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 10)
-    random_forest(feature_names, x_train, y_train, x_test, y_train)
+    random_forest(feature_names, x_train, y_train, x_test, y_test)
 
     # classify based on profile features + graph features
     feature_names += ['beetweenness_centrality', 'local_clustering_coefficient', 'degree_centrality']
     x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', 'graph_features.csv', 10)
-    random_forest(feature_names, x_train, y_train, x_test, y_train)
+    random_forest(feature_names, x_train, y_train, x_test, y_test)
