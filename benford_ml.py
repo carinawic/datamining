@@ -1,4 +1,5 @@
 from operator import index
+from re import X
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense
@@ -8,7 +9,7 @@ from scipy.stats import chisquare, chi2
 import csv
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from sklearn.model_selection import ShuffleSplit
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
@@ -172,25 +173,6 @@ def calculate_benford_for_each_user():
     #plt.plot(realusers, realuserbenford, color='green', marker='o')
     #plt.show()
 
-def partition_kfold(to_be_partitioned):
-
-    # from: https://scikit-learn.org/stable/modules/cross_validation.html
-
-    # the size of the test set will be 1/K (i.e. 1/n_splits), 
-    # so you can tune that parameter to control the test size 
-    # (e.g. n_splits=3 will have test split of size 1/3 = 33% of your data
-    kf = KFold(n_splits=3)
-
-    '''
-    the return value partition_kfold(X) is iterable such as:
-
-    for train, test in partition_kfold(X):
-       print(train)
-       print(test)
-    '''
-
-    return kf.split(to_be_partitioned)
-
 
 def partition_shufflesplit(to_be_partitioned):
     # from: https://scikit-learn.org/stable/modules/cross_validation.html
@@ -200,136 +182,114 @@ def partition_shufflesplit(to_be_partitioned):
     return ss.split(to_be_partitioned)
 
 
-def partition_with_regards_to_dataset(profile_features_file, graph_features_file, real_test, fake_test):
-    
-    x_train = [] # training data
-    y_train = [] # training labels
-    x_test = [] # test data
-    y_test = [] # test labels
+def merge_features(profile_features_file, graph_features_file):
+    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+       'no_followers', 'following_rate', 'belongs_to_list', 'location',
+       'has_bio', 'beetweenness_centrality',
+       'local_clustering_coefficient', 'degree_centrality', 'real']
+    profile_features = pd.read_csv(profile_features_file, header=0)
+    graph_features = pd.read_csv(graph_features_file, header=0)
 
-    dataset = ""
-    real_counter = 0
-    fake_counter = 0
+    merged_data = profile_features.merge(graph_features, left_on='id', 
+    right_on='user_id', how='left')
+    merged_data.fillna(0, inplace=True)
+    merged_data = merged_data[columns]
 
-    graph_features = False
-    if graph_features_file:
-        with open(graph_features_file, mode='r') as inp:
-            reader = csv.reader(inp)
-            dict_from_csv = {row[0]:(row[1], row[2], row[3]) for row in reader}
-        graph_features = True
-
-    # read the profile features of each user
-    user_features = pd.read_csv(profile_features_file, header=0,  converters={'id': str})
-    for _, row in user_features.iterrows(): 
-        user_type = row['real'] # row['real'][i] is 0 or 1
-        sample = [row['ff_ratio'], row['no_tweets'], row['profile_has_name'], \
-                row['no_friends'], row['no_followers'], row['following_rate'], \
-                row['belongs_to_list'], row['location'], row['has_bio']]
-        # add graph features if specified
-        if graph_features:
-            if row['id'] in dict_from_csv:
-                elem = dict_from_csv[row['id']]
-                sample += [elem[0], elem[1], elem[2]]
-            else:
-                sample += [0.0, 0.0, 0.0]
-
-        if row['real'] == 1:
-            if real_counter < real_test:
-                x_test.append(sample)
-                y_test.append(user_type)
-                real_counter = real_counter + 1
-            else:
-                x_train.append(sample)
-                y_train.append(user_type)
-        elif fake_counter < fake_test:
-            x_test.append(sample)
-            y_test.append(user_type)
-            fake_counter = fake_counter + 1
-        else:
-            x_train.append(sample)
-            y_train.append(user_type) 
-
-    return  x_train, y_train, x_test, y_test
+    print(merged_data.info())
+    print(merged_data.head())
+    return merged_data
 
 
 def performance_metrics(classifier, feature_names, y_test, y_pred):
     # evaluate the peformance of the model
     print('Confusion matrix ', confusion_matrix(y_test, y_pred))
     print(classification_report(y_test, y_pred))
-    print(accuracy_score(y_test, y_pred))
+    accuracy = accuracy_score(y_test, y_pred)
+    print(accuracy)
 
     # see which features are the most important
     feature_imp = pd.Series(classifier.feature_importances_,index=feature_names).sort_values(ascending=False)
     print(feature_imp)
+    return accuracy
 
 
-def random_forest(feature_names, x_train, y_train, x_test, y_test):
-    print(len(x_train), len(y_train), len(x_test), len(y_test))
-    # scale the features
-    sc = StandardScaler()
-    x_train = sc.fit_transform(np.array(x_train))
-    x_test = sc.transform(np.array(x_test))
+def random_forest(feature_names, data):
+    X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data[['real']], stratify=data[['real']], test_size=0.33, random_state=42)
+
     # create a baseline model
     # instantiate model with 1000 decision trees
     rf = RandomForestClassifier(n_estimators = 1000, random_state = 42)
-    # train the model on training data
-    rf.fit(x_train, y_train)
-    # use the forest's predict method on the test data
-    y_pred = rf.predict(x_test)
-    # evaluate model
-    print('RandomForestClassifier performance before tuning')
-    performance_metrics(rf, feature_names, y_test, y_pred)
+
+    predictions = []
+    scores = []
+    cv = StratifiedKFold(n_splits=5, random_state=42, shuffle=True)
+    for i, (train, val) in enumerate(cv.split(X_train, y_train)):
+        x_train_cv = X_train.iloc[train]
+        y_train_cv = y_train.iloc[train]
+        x_val_cv = X_train.iloc[val]
+        y_val_cv = y_train.iloc[val]
+        # scale the features
+        sc = StandardScaler()
+        x_train_cv = sc.fit_transform(np.array(x_train_cv))
+        x_val_cv = sc.transform(np.array(x_val_cv))
+
+        rf.fit(x_train_cv, y_train_cv)
+        y_pred = rf.predict(x_val_cv)
+        predictions.append((i, y_val_cv, y_pred))
+        print('RandomForestClassifier performance before tuning')
+        performance_metrics(rf, feature_names, y_val_cv, y_pred)
+
 
     # hyperparameter tunning
     # number of trees in random forest
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    # number of features to consider at every split
-    max_features = ['auto', 'sqrt']
-    # maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
-    max_depth.append(None)
-    # minimum number of samples required to split a node
-    min_samples_split = [2, 5, 10]
-    # minimum number of samples required at each leaf node
-    min_samples_leaf = [1, 2, 4]
-    # method of selecting samples for training each tree
-    bootstrap = [True, False]
-    # create the random grid
-    param_grid = {'n_estimators': n_estimators,
-                'max_features': max_features,
-                'max_depth': max_depth,
-                'min_samples_split': min_samples_split,
-                'min_samples_leaf': min_samples_leaf,
-                'bootstrap': bootstrap}
-    print(param_grid)
+    # n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
+    # # number of features to consider at every split
+    # max_features = ['auto', 'sqrt']
+    # # maximum number of levels in tree
+    # max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+    # max_depth.append(None)
+    # # minimum number of samples required to split a node
+    # min_samples_split = [2, 5, 10]
+    # # minimum number of samples required at each leaf node
+    # min_samples_leaf = [1, 2, 4]
+    # # method of selecting samples for training each tree
+    # bootstrap = [True, False]
+    # # create the random grid
+    # param_grid = {'n_estimators': n_estimators,
+    #             'max_features': max_features,
+    #             'max_depth': max_depth,
+    #             'min_samples_split': min_samples_split,
+    #             'min_samples_leaf': min_samples_leaf,
+    #             'bootstrap': bootstrap}
+    # print(param_grid)
 
-    rf_tuned = RandomForestClassifier()
-    # instantiate the grid search model
-    grid_search = GridSearchCV(estimator = rf_tuned, param_grid = param_grid, 
-                          cv = 3, n_jobs = -1, verbose = 2)
-    # fit the grid search to the data
-    grid_search.fit(x_train, y_train)
-    print(grid_search.best_params_)
-    # best_grid = grid_search.best_estimator_
+    # rf_tuned = RandomForestClassifier()
+    # # instantiate the grid search model
+    # grid_search = GridSearchCV(estimator = rf_tuned, param_grid = param_grid, 
+    #                       cv = 3, n_jobs = -1, verbose = 2)
+    # # fit the grid search to the data
+    # grid_search.fit(x_train, y_train)
+    # print(grid_search.best_params_)
+    # # best_grid = grid_search.best_estimator_
 
-    # train a model with the best parameters produced by GridSearch
-    best_params_dict = grid_search.best_params_
-    rf_best = RandomForestClassifier(n_estimators=best_params_dict['n_estimators'], 
-        max_features=best_params_dict['max_features'],
-        max_depth=best_params_dict['max_depth'],
-        min_samples_split=best_params_dict['min_samples_split'], 
-        min_samples_leaf=best_params_dict['min_samples_leaf'],
-        bootstrap=best_params_dict['bootstrap'])
+    # # train a model with the best parameters produced by GridSearch
+    # best_params_dict = grid_search.best_params_
+    # rf_best = RandomForestClassifier(n_estimators=best_params_dict['n_estimators'], 
+    #     max_features=best_params_dict['max_features'],
+    #     max_depth=best_params_dict['max_depth'],
+    #     min_samples_split=best_params_dict['min_samples_split'], 
+    #     min_samples_leaf=best_params_dict['min_samples_leaf'],
+    #     bootstrap=best_params_dict['bootstrap'])
 
-    y_pred = rf_best.predict(x_test)
-    print('RandomForestClassifier performance after tuning')
-    performance_metrics(rf_best, feature_names, y_test, y_pred)
+    # y_pred = rf_best.predict(x_test)
+    # print('RandomForestClassifier performance after tuning')
+    # performance_metrics(rf_best, feature_names, y_test, y_pred)
 
 
 def classifier():
     # partition_with_regards_to_dataset(3)[0] 
     # will return the test_labels list, which contains the test_labels of the 3 first nodes in every dataset
-    test_and_training_data = partition_with_regards_to_dataset(3) 
+    test_and_training_data = merge_features('profile_features.csv', 'graph_features.csv')
 
     print(test_and_training_data[0])
     
@@ -370,11 +330,18 @@ def classifier():
 
 if __name__ == '__main__':
     # classify based on profile features
-    feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-    'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
-    x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 100, 100)
-    random_forest(feature_names, x_train, y_train, x_test, y_test)
+    # feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+    # 'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
 
+    # x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 100, 100)
+    # random_forest(feature_names, x_train, y_train, x_test, y_test)
+
+    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+       'no_followers', 'following_rate', 'belongs_to_list', 'location',
+       'has_bio', 'beetweenness_centrality',
+       'local_clustering_coefficient', 'degree_centrality']
+    data = merge_features('profile_features.csv', 'graph_features.csv')
+    random_forest(columns, data)
     # classify based on profile features + graph features
     # feature_names += ['beetweenness_centrality', 'local_clustering_coefficient', 'degree_centrality']
     # x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', 'graph_features.csv', 100, 100)
