@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
+from statistics import mean
 
 benfords_probs = {
     1 : 30.1,
@@ -214,6 +215,7 @@ def performance_metrics(classifier, feature_names, y_test, y_pred):
 
 
 def random_forest(feature_names, data):
+    # iloc[:, :-1] -> select all the columns except the last one
     X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data[['real']], stratify=data[['real']], test_size=0.33, random_state=42)
 
     # create a baseline model
@@ -233,57 +235,59 @@ def random_forest(feature_names, data):
         x_train_cv = sc.fit_transform(np.array(x_train_cv))
         x_val_cv = sc.transform(np.array(x_val_cv))
 
-        rf.fit(x_train_cv, y_train_cv)
+        rf.fit(x_train_cv, y_train_cv.values.ravel())
         y_pred = rf.predict(x_val_cv)
         predictions.append((i, y_val_cv, y_pred))
         print('RandomForestClassifier performance before tuning')
-        performance_metrics(rf, feature_names, y_val_cv, y_pred)
+        scores.append(performance_metrics(rf, feature_names, y_val_cv, y_pred))
 
+    baseline_accuracy = mean(scores)
+    print('Accuracy of baseline model', baseline_accuracy)
+    # TODO: Do we train again on the entire test data?
+    rf.fit(X_train, y_train)
+    # evaluate perfomance for baseline model on the test data
+    y_pred = rf.predict(X_test)
+    print('RandomForestClassifier performance on the test data')
+    performance_metrics(rf, feature_names, y_test, y_pred)
 
     # hyperparameter tunning
     # number of trees in random forest
-    # n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    # # number of features to consider at every split
-    # max_features = ['auto', 'sqrt']
-    # # maximum number of levels in tree
-    # max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
-    # max_depth.append(None)
-    # # minimum number of samples required to split a node
-    # min_samples_split = [2, 5, 10]
-    # # minimum number of samples required at each leaf node
-    # min_samples_leaf = [1, 2, 4]
-    # # method of selecting samples for training each tree
-    # bootstrap = [True, False]
-    # # create the random grid
-    # param_grid = {'n_estimators': n_estimators,
-    #             'max_features': max_features,
-    #             'max_depth': max_depth,
-    #             'min_samples_split': min_samples_split,
-    #             'min_samples_leaf': min_samples_leaf,
-    #             'bootstrap': bootstrap}
-    # print(param_grid)
+    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
+    # number of features to consider at every split
+    max_features = ['auto', 'sqrt']
+    # maximum number of levels in tree
+    max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
+    max_depth.append(None)
+    # minimum number of samples required to split a node
+    min_samples_split = [2, 5, 10]
+    # minimum number of samples required at each leaf node
+    min_samples_leaf = [1, 2, 4]
+    # method of selecting samples for training each tree
+    bootstrap = [True, False]
+    # create the random grid
+    param_grid = {'n_estimators': n_estimators,
+                'max_features': max_features,
+                'max_depth': max_depth,
+                'min_samples_split': min_samples_split,
+                'min_samples_leaf': min_samples_leaf,
+                'bootstrap': bootstrap}
+    print(param_grid)
 
-    # rf_tuned = RandomForestClassifier()
-    # # instantiate the grid search model
-    # grid_search = GridSearchCV(estimator = rf_tuned, param_grid = param_grid, 
-    #                       cv = 3, n_jobs = -1, verbose = 2)
-    # # fit the grid search to the data
-    # grid_search.fit(x_train, y_train)
-    # print(grid_search.best_params_)
-    # # best_grid = grid_search.best_estimator_
+    rf_tuned = RandomForestClassifier()
+    # instantiate the grid search model
+    grid_search = GridSearchCV(estimator = rf_tuned, param_grid = param_grid, 
+                          cv = 5, n_jobs = -1, verbose = 0)
+    # fit the grid search to the data
+    grid_search.fit(X_train, y_train.values.ravel())
+    print(grid_search.best_params_)
 
-    # # train a model with the best parameters produced by GridSearch
-    # best_params_dict = grid_search.best_params_
-    # rf_best = RandomForestClassifier(n_estimators=best_params_dict['n_estimators'], 
-    #     max_features=best_params_dict['max_features'],
-    #     max_depth=best_params_dict['max_depth'],
-    #     min_samples_split=best_params_dict['min_samples_split'], 
-    #     min_samples_leaf=best_params_dict['min_samples_leaf'],
-    #     bootstrap=best_params_dict['bootstrap'])
+    # train a model with the best parameters produced by GridSearch
+    rf_best = grid_search.best_estimator_
+    rf_best.fit(X_train, y_train)
 
-    # y_pred = rf_best.predict(x_test)
-    # print('RandomForestClassifier performance after tuning')
-    # performance_metrics(rf_best, feature_names, y_test, y_pred)
+    y_pred = rf_best.predict(X_test)
+    print('RandomForestClassifier performance after tuning on the test data')
+    performance_metrics(rf_best, feature_names, y_test, y_pred)
 
 
 def classifier():
