@@ -91,18 +91,24 @@ def compute_graph_features(G, dataset, input_file, output_file):
     labels_list = list(G_nx.nodes)
 
     # get a list of user IDs
-    users = pd.read_csv(dataset, header=0, usecols=[0], converters={'id': str})
+    users = pd.read_csv(dataset, header=0, usecols=[0], delimiter=' ', converters={'id': str})
     # conver the user IDs to a dictionary
     ids_list = users['id'].to_list()
 
+    # list of ids that will be subtracted from the original list of ids to identify the isolated nodes
+    nodes = []
+
     # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
-    fields = ["used_id", "beetweenness_centrality", "local_clustering_coefficient", "degree_centrality"]
+    fields = ["user_id", "beetweenness_centrality", "local_clustering_coefficient", "degree_centrality"]
     f.writerow(fields)
     for u in G.iterNodes():
         # output the values only for the users in users.csv
         if labels_list[u] in ids_list:
+            nodes.append(labels_list[u])
             f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
+
+    # get the isolated nodes
 
 
 def load_data_gml(filepath):
