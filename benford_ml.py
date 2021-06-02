@@ -246,7 +246,6 @@ def partition_with_regards_to_dataset(profile_features_file, graph_features_file
 
         counter = counter + 1
 
-    print(x_train)
     return  x_train, y_train, x_test, y_test
 
 
