@@ -287,7 +287,7 @@ if __name__ == '__main__':
        'has_bio', 'benford_score', 'bot']
     profile_features = pd.read_csv('profile_features.csv', header=0)
     merged_data = profile_features.merge(benford_scores, on='id', how='inner')
-    random_forest(columns[:-1], profile_features[columns])
+    random_forest(columns[:-1], merged_data[columns])
 
     # Benford score + graph features
     columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
