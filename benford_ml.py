@@ -1,16 +1,10 @@
-from operator import index
-from re import X
 import numpy as np
-from keras.models import Sequential
-from keras.layers.core import Dense
-import matplotlib.pyplot as plt
 import json
-from scipy.stats import chisquare, chi2
-import csv
+from scipy.stats import chisquare
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedKFold, train_test_split
-from sklearn.model_selection import ShuffleSplit
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn.preprocessing import StandardScaler
@@ -40,7 +34,7 @@ def benford_score_chisquare(fdf_array):
     # dof = no of categories - 1
     chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array)
     # print(f'chisq = {chisq}')
-    return chisq
+    return chisq, p
 
 
 def benford_score_pearson(fdf_array):
@@ -55,8 +49,6 @@ def benford_score_simple(first_digits_freq, total_num_values):
         for key in list(first_digits_freq.keys()):
         #print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
         #which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
-        
-        
             total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
 
             #print("total_num_values", total_num_values)
@@ -72,7 +64,6 @@ def compute_benford_score(input_dict, benford_score_method):
     
     dict = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
     total_num_values = 0
-
     
     for friend in input_dict:
         friend_count = input_dict[friend]['friends_count']
@@ -99,105 +90,84 @@ def compute_benford_score(input_dict, benford_score_method):
 def calculate_benford_for_each_user():
     # this method is just for plotting now
     
-    # building a lookup table where we can input a user and see if real or fake
-    with open("all_users.csv") as csvfile:
-            
-        real_or_fake_dict = {}
-        for content in csvfile: 
-            spamreader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-            for row in spamreader:
-                #row[0] is id, row[1] is real or fake
-                if(row[1].find("bot")>0):
-                    real_or_fake_dict[row[0]] = "bot"
-                else:
-                    real_or_fake_dict[row[0]] = "real"
-        
-        # just checking how many bots vs real users we have
-        botcounter = 0
-        realcounter = 0
+    results = pd.DataFrame(columns = ['id', 'benford_score'])
 
-        for key in real_or_fake_dict:
-            if real_or_fake_dict[key] == "bot":
-                botcounter = botcounter + 1
-            else:
-                realcounter = realcounter + 1
+    df = pd.read_csv("final_data.txt", sep='[ \n]', header=None, names= ['id', 'type'], engine="python")
+    df = df.set_index('id')
 
-        print("amount of real users: ", realcounter)
-        print("amount of bots: ", botcounter)
+    print("Total bots + users: {}".format(df.shape[0]))
 
-    
+    bots = df[df.type.str.contains('bot', case=True)].shape[0]
+
+    print("Total users: {}".format(df.shape[0] - bots))
+    print("Total bots: {}".format(bots))
+
     #separating the users to plot them in different colors later
     fakeuserbenford = []
     realuserbenford = []
     fakeusers = []
     realusers = []
+    lost_real = 0
+    lost_bot = 0
 
-    with open("final_data_v2.json") as json_file:
+    f = open('final_dataset.json', 'r')
+    users = json.loads(f.read())
+
+    # each user who will have a unique benford's score
+    for user in users:
+
+        # ['friends'] returns the list of such elements:
+        # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
+        friendproperties = users[user]['friends']
+
+        # compute the benford score for accounts with more than 100 friends
+        if len(friendproperties) < 100:
+            if "bot" in users[user]['user_dataset']:
+                lost_bot = lost_bot + 1
+            else:
+                lost_real = lost_real + 1
             
-        for content in json_file: # there is only 1
-                
-            users = json.loads(content)
-            n = 0    
-            # each user who will have a unique benford's score
-            for user in users:
+            results = results.append({'id' : int(user), 'benford_score' : 0}, ignore_index=True)
+            continue
+ 
+        # A p score closer to 1 means that the user follows Benford's Law
+        benford_degree, p = compute_benford_score(friendproperties, 'chi-square')
+        results = results.append({'id' : int(user), 'benford_score' : p}, ignore_index=True)
 
-                # ['friends'] returns the list of such elements:
-                # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
-                friendproperties = (users[user]['friends'])
-                # compute the benford score for accounts with more than 100 friends
-                if len(friendproperties) < 100:
-                    # print(f'friendproperties len {len(friendproperties)}')
-                    continue
+        # filling our lists that we want to plot
+        if "bot" in users[user]['user_dataset']:
+            fakeusers.append(user)
+            fakeuserbenford.append(p)
+        else:
+            realusers.append(user)
+            realuserbenford.append(p)
 
-                benford_degree = compute_benford_score(friendproperties, 'chi-square')
-                # print("user", user)
-                # print("has benford degree", benford_degree)
+    # # plotting users
+    print("amount of real users: ", len(realusers))
+    print("amount of bots: ", len(fakeusers))
+    print("lost real users: ", lost_real)
+    print("lost bots: ", lost_bot)
 
-                # filling our lists that we want to plot
-                if user in real_or_fake_dict:
-                    if real_or_fake_dict[user] == "bot":
-                        fakeusers.append(user)
-                        fakeuserbenford.append(benford_degree)
-                    else:
-                        realusers.append(user)
-                        realuserbenford.append(benford_degree)               
+    # plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
+    # plt.plot(realusers, realuserbenford, color='green', marker='o')
+    # plt.show()
 
-                # n = n + 1
-                # if n == 10:
-                #     break
+    results['id'] = results['id'].astype('int64')
 
-    # plotting users
-    #print("amount of real users: ", len(realusers))
-    #print("amount of bots: ", len(fakeusers))
-
-    #plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
-    #plt.plot(realusers, realuserbenford, color='green', marker='o')
-    #plt.show()
-
-
-def partition_shufflesplit(to_be_partitioned):
-    # from: https://scikit-learn.org/stable/modules/cross_validation.html
-
-    # here we specify a test size instead, and the test data is picked randomly from all over the total data
-    ss = ShuffleSplit(n_splits=5, test_size=0.25, random_state=0)
-    return ss.split(to_be_partitioned)
-
+    return results
 
 def merge_features(profile_features_file, graph_features_file):
-    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-       'no_followers', 'following_rate', 'belongs_to_list', 'location',
-       'has_bio', 'beetweenness_centrality',
-       'local_clustering_coefficient', 'degree_centrality', 'real']
     profile_features = pd.read_csv(profile_features_file, header=0)
     graph_features = pd.read_csv(graph_features_file, header=0)
 
+    # some users are isolated nodes, so the have no graph features
     merged_data = profile_features.merge(graph_features, left_on='id', 
     right_on='user_id', how='left')
+    # still, we are keeping them, since they have profile features
     merged_data.fillna(0, inplace=True)
-    merged_data = merged_data[columns]
 
-    print(merged_data.info())
-    print(merged_data.head())
+    # print(merged_data.info())
+    # print(merged_data.head())
     return merged_data
 
 
@@ -216,7 +186,7 @@ def performance_metrics(classifier, feature_names, y_test, y_pred):
 
 def random_forest(feature_names, data):
     # iloc[:, :-1] -> select all the columns except the last one
-    X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data[['real']], stratify=data[['real']], test_size=0.33, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(data.iloc[:, :-1], data[['bot']], stratify=data[['bot']], test_size=0.33, random_state=42)
 
     # create a baseline model
     # instantiate model with 1000 decision trees
@@ -243,8 +213,8 @@ def random_forest(feature_names, data):
 
     baseline_accuracy = mean(scores)
     print('Accuracy of baseline model', baseline_accuracy)
-    # TODO: Do we train again on the entire test data?
-    rf.fit(X_train, y_train)
+    # Train again on the entire test data
+    rf.fit(X_train, y_train.values.ravel())
     # evaluate perfomance for baseline model on the test data
     y_pred = rf.predict(X_test)
     print('RandomForestClassifier performance on the test data')
@@ -283,70 +253,48 @@ def random_forest(feature_names, data):
 
     # train a model with the best parameters produced by GridSearch
     rf_best = grid_search.best_estimator_
-    rf_best.fit(X_train, y_train)
+    rf_best.fit(X_train, y_train.values.ravel())
 
     y_pred = rf_best.predict(X_test)
     print('RandomForestClassifier performance after tuning on the test data')
     performance_metrics(rf_best, feature_names, y_test, y_pred)
 
-
-def classifier():
-    # partition_with_regards_to_dataset(3)[0] 
-    # will return the test_labels list, which contains the test_labels of the 3 first nodes in every dataset
-    test_and_training_data = merge_features('profile_features.csv', 'graph_features.csv')
-
-    print(test_and_training_data[0])
-    
-    # keras.Sequential groups a linear stack of layers into a Model
-    model = Sequential()
-    # dense layer: we narrow all our nodes into 16 nodes
-    # ReLU (Rectified Linear Unit) = f(x) = 0 until a certain x-value thereafter linear 
-    model.add(Dense(16, activation='relu', input_dim=3))
-    # last layer is 1 neuron with a value from a sigmoid function 
-    model.add(Dense(1, activation='sigmoid'))
-
-    # creating the model
-    model.compile(loss='mean_squared_error',
-                optimizer='adam',
-                metrics=['accuracy'])
-
-    # we try to fit our model to our training data
-    # epochs is the amount of training rounds
-    # verbose alters the terminal output type
-    model.fit(test_and_training_data[3], test_and_training_data[2], epochs=500, verbose=2)
-
-    print("evaluating test data:")
-
-    # testing our network on the test data
-    test_results = model.evaluate(test_and_training_data[1], test_and_training_data[0])
-    print(test_results)
-
-
-    '''
-    # printing a summary of the model
-    model.summary()
-
-    # making a prediction for a specific value:
-    predict = model.predict(test_data[0])
-    print("prediction:", predict[0])
-    print("actual:", test_labels[0])
-    '''
-
 if __name__ == '__main__':
-    # classify based on profile features
-    # feature_names = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-    # 'no_followers', 'following_rate', 'belongs_to_list', 'location', 'has_bio']
+    # Baseline
+    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+       'no_followers', 'following_rate', 'belongs_to_list', 'location',
+       'has_bio', 'bot']
+    profile_features = pd.read_csv('profile_features.csv', header=0)
+    random_forest(columns[:-1], profile_features[columns])
 
-    # x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', '', 100, 100)
-    # random_forest(feature_names, x_train, y_train, x_test, y_test)
-
+    # Graph features
     columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
        'no_followers', 'following_rate', 'belongs_to_list', 'location',
        'has_bio', 'beetweenness_centrality',
-       'local_clustering_coefficient', 'degree_centrality']
+       'local_clustering_coefficient', 'degree_centrality', 'bot']
+    merged_data = merge_features('profile_features.csv', 'graph_features.csv')
+    # remove the id and user_id columns from the features after the join
+    random_forest(columns[:-1], merged_data[columns])
+
+
+    # Add the benford scores
+
+    benford_scores = calculate_benford_for_each_user()
+
+    # Baseline Benford score
+    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+       'no_followers', 'following_rate', 'belongs_to_list', 'location',
+       'has_bio', 'benford_score', 'bot']
+    profile_features = pd.read_csv('profile_features.csv', header=0)
+    merged_data = profile_features.merge(benford_scores, on='id', how='inner')
+    random_forest(columns[:-1], profile_features[columns])
+
+    # Benford score + graph features
+    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+       'no_followers', 'following_rate', 'belongs_to_list', 'location',
+       'has_bio', 'beetweenness_centrality',
+       'local_clustering_coefficient', 'degree_centrality', 'benford_score', 'bot']
     data = merge_features('profile_features.csv', 'graph_features.csv')
-    random_forest(columns, data)
-    # classify based on profile features + graph features
-    # feature_names += ['beetweenness_centrality', 'local_clustering_coefficient', 'degree_centrality']
-    # x_train, y_train, x_test, y_test = partition_with_regards_to_dataset('profile_features.csv', 'graph_features.csv', 100, 100)
-    # random_forest(feature_names, x_train, y_train, x_test, y_test)
+    merged_data = data.merge(benford_scores, on='id', how='inner')
+
+    random_forest(columns[:-1], merged_data[columns])

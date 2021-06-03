@@ -99,7 +99,7 @@ features = ['id', 'ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
 def compute_feature_vector(input_file, features, output_file):
     # save results to a CSV file to be used as features for our classifier
     f = csv.writer(open('{}.csv'.format(output_file), 'w'))
-    fields = features + ['dataset', 'real']
+    fields = features + ['dataset', 'bot']
     f.writerow(fields)
 
     with open(input_file, 'r') as infile:
@@ -110,10 +110,10 @@ def compute_feature_vector(input_file, features, output_file):
                 f_vec.append(pf_dict[feature](user))
             f_vec.append(user['type'][1:-1])
             if "_real" in user['type']:
-                f_vec.append(1)
-            else:
                 f_vec.append(0)
+            else:
+                f_vec.append(1)
             f.writerow(f_vec)
 
 
-compute_feature_vector('data-valid-users/hydrated_tweets.json', features, 'profile_features')
+compute_feature_vector('hydrated_tweets.json', features, 'profile_features')
