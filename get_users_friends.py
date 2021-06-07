@@ -4,14 +4,49 @@ import tweepy
 import json
 import argparse
 import pandas as pd
+import matplotlib.pyplot as plt
 from time import sleep
+from math import sqrt
+from network import dataset_list
 
+
+def subset_of_friends():
+    f = open('final_dataset.json', 'r')
+    users = json.loads(f.read())
+
+    friends_list = []
+    for user in users:
+        # ['friends'] returns the list of such elements:
+        # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
+        friends = users[user]['friends']
+        for friend in friends:
+            friends_list.append({'source_id': int(user), 'target_id': int(friend), 'friends_count': 
+            friends[friend]['friends_count'], 'dataset': users[user]['user_dataset']})
+
+    friends_df = pd.DataFrame(friends_list, columns = ['source_id', 'target_id', 'friends_count', 'dataset'])
+    # write the friends to be crawled to 5 csv files divided by the dataset name
+    for dataset in dataset_list:
+        dataset_df = friends_df[friends_df.dataset == dataset]
+        print(dataset, 'size = ', dataset_df.shape[0])
+        min_val = min(dataset_df['friends_count'])
+        max_val = max(dataset_df['friends_count'])
+        print(dataset, dataset_df.shape[0], 'min =', min_val, 'max =', max_val)
+        dataset_df[['target_id', 'friends_count']].to_csv('crawl-friends/get_friends_{}.csv'.format(dataset), index=False)
+        dataset_df[['source_id', 'target_id']].to_csv('edges/{}_edges.csc'.format(dataset), index=False)
+
+    # TODO: plot histogram of number of friends per user, not working yet
+    # friend_counts = friends_df[friends_df.dataset == "TFP_real"]['friends_count'].astype(int).to_numpy()
+    # print(len(friend_counts))
+    # min_val = min(friend_counts)
+    # max_val = max(friend_counts)
+    # bin_width = max_val - min_val
+    # print(friend_counts)
+    # plt.hist(friend_counts, ec='black', bins='auto')
+    # plt.show()
 
 """
 Script to get all the friends ID's 
 """
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--outputfile", help="Output file name with extension")
@@ -85,4 +120,5 @@ def main():
 
 
 # main invoked here    
-main()
+# main()
+subset_of_friends()
