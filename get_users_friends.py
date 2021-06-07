@@ -120,5 +120,5 @@ def main():
 
 
 # main invoked here    
-# main()
-subset_of_friends()
+main()
+# subset_of_friends()
