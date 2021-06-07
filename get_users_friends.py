@@ -46,6 +46,14 @@ def subset_of_friends():
     # plt.hist(friend_counts, ec='black', bins='auto')
     # plt.show()
 
+
+def get_subset_of_friends():
+    for dataset in dataset_list:
+        dataset_df = pd.read_csv("crawl-friends/{}.csv".format(dataset), header=0, usecols=[0, 1])    
+        friends_df = dataset_df.groupby('source_id').head(50)
+        friends_df.to_csv('crawl-friends/{}_friends.csv'.format(dataset), index=False)
+
+
 """
 Script to get all the friends ID's 
 """
@@ -122,5 +130,6 @@ def main():
 
 
 # main invoked here    
-# main()
-subset_of_friends()
+main()
+# subset_of_friends()
+# get_subset_of_friends()
