@@ -26,13 +26,15 @@ def subset_of_friends():
     friends_df = pd.DataFrame(friends_list, columns = ['source_id', 'target_id', 'friends_count', 'dataset'])
     # write the friends to be crawled to 5 csv files divided by the dataset name
     for dataset in dataset_list:
-        dataset_df = friends_df[friends_df.dataset == dataset]
-        print(dataset, 'size = ', dataset_df.shape[0])
+        dataset_df = pd.DataFrame(friends_df[friends_df.dataset == dataset])
         min_val = min(dataset_df['friends_count'])
         max_val = max(dataset_df['friends_count'])
         print(dataset, dataset_df.shape[0], 'min =', min_val, 'max =', max_val)
-        dataset_df[['target_id', 'friends_count']].to_csv('crawl-friends/get_friends_{}.csv'.format(dataset), index=False)
-        dataset_df[['source_id', 'target_id']].to_csv('edges/{}_edges.csc'.format(dataset), index=False)
+        print(dataset, 'size = ', dataset_df.shape[0])
+        dataset_df.drop_duplicates('target_id', keep='first', inplace=True)
+        print(dataset, 'size = ', dataset_df.shape[0])
+        dataset_df[['source_id', 'target_id', 'friends_count']].to_csv('crawl-friends/{}.csv'.format(dataset), index=False)
+        # dataset_df[['source_id', 'target_id']].to_csv('edges/{}.csv'.format(dataset), index=False)
 
     # TODO: plot histogram of number of friends per user, not working yet
     # friend_counts = friends_df[friends_df.dataset == "TFP_real"]['friends_count'].astype(int).to_numpy()
@@ -120,5 +122,5 @@ def main():
 
 
 # main invoked here    
-main()
-# subset_of_friends()
+# main()
+subset_of_friends()
