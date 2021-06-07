@@ -7,8 +7,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from time import sleep
 from math import sqrt
-from network import dataset_list
 
+dataset_list = ["E13_real", "TFP_real", "FSF_bot", "INT_bot", "TWT_bot"]
 
 def subset_of_friends():
     f = open('final_dataset.json', 'r')
