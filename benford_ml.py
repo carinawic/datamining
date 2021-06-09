@@ -30,32 +30,21 @@ def chisq_stat(o, e):
     return sum( [(o - e)**2/e for (o, e) in zip(o, e)] )
 
 
-def benford_score_chisquare(fdf_array):
+def benford_score_chisquare(fdf_array, no_of_fsds):
     # dof = no of categories - 1
-    chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_probs_array)
+    # convert the expected FSDs frequencies from percentages to numbers
+    benford_array = []
+    for elem in benford_probs_array:
+        benford_array.append(no_of_fsds * (elem / 100))
+    # print(benford_array)
+    chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_array)
     # print(f'chisq = {chisq}')
     return chisq, p
 
 
-def benford_score_pearson(fdf_array):
+def benford_score_pearson(fdf_array, no_of_fsds):
     my_rho = np.corrcoef(benford_probs_array, fdf_array)
     return my_rho[0,1]
-
-
-def benford_score_simple(first_digits_freq, total_num_values):
-    total_percentage_diff = 0
-
-    if total_num_values!=0:
-        for key in list(first_digits_freq.keys()):
-        #print(f'{key} occured {first_digits_freq[key]} times out of {total_num_values} => {first_digits_freq[key] / total_num_values *100}% \
-        #which should be {benfords_probs[key]}% => we are off by {first_digits_freq[key] / total_num_values * 100 - benfords_probs[key]:.1f} %')
-            total_percentage_diff += abs((first_digits_freq[key] / total_num_values) * 100 - benfords_probs[key])
-
-            #print("total_num_values", total_num_values)
-            #print("total_percentage_diff", total_percentage_diff)
-            return total_percentage_diff / total_num_values
-        
-    return -1    
 
 
 # output_file_short is a file containing items like
@@ -63,7 +52,6 @@ def benford_score_simple(first_digits_freq, total_num_values):
 def compute_benford_score(input_dict, benford_score_method):
     
     dict = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
-    total_num_values = 0
     
     for friend in input_dict:
         friend_count = input_dict[friend]['friends_count']
@@ -72,19 +60,16 @@ def compute_benford_score(input_dict, benford_score_method):
         # Increment count of word by 1
         if(first_digit != 0):
             dict[first_digit] = dict[first_digit] + 1
-            total_num_values += 1
     
-    # convert the freq to precentages
     fdf_array = []
     for v in list(dict.values()):
-        fdf_array.append(v / total_num_values * 100)
+        fdf_array.append(v)
     # print(fdf_array)
 
-    benford_score_func = {'simple': benford_score_simple, 
-                          'pearson': benford_score_pearson, 
+    benford_score_func = {'pearson': benford_score_pearson, 
                           'chi-square': benford_score_chisquare}[benford_score_method]
 
-    return benford_score_func(fdf_array)
+    return benford_score_func(fdf_array, len(input_dict))
 
 
 def calculate_benford_for_each_user():
