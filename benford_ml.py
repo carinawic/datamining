@@ -1,3 +1,4 @@
+from sys import exec_prefix
 import numpy as np
 import json
 from scipy.stats import chisquare
@@ -76,12 +77,14 @@ def calculate_benford_for_each_user():
     
     results = pd.DataFrame(columns = ['id', 'benford_score'])
 
-    df = pd.read_csv("data-valid-users/final_data", sep='[ \n]', header=None, names= ['id', 'type'], engine="python")
+    df = pd.read_csv("final_data.txt", sep='[ \n]', header=None, names= ['id', 'type'], engine="python")
+    df = df.set_index('id')
+
+    valid_list = df.index.tolist()
+
     print("Total bots + users: {}".format(df.shape[0]))
 
     bots = df[df.type.str.contains('bot', case=True)].shape[0]
-    valid_users = df['id'].astype('int64').to_list()
-    # print(valid_users)
 
     print("Total users: {}".format(df.shape[0] - bots))
     print("Total bots: {}".format(bots))
@@ -96,41 +99,54 @@ def calculate_benford_for_each_user():
 
     f = open('final_dataset.json', 'r')
     users = json.loads(f.read())
-    # print(len(users))
 
     # each user who will have a unique benford's score
     for user in users:
+
+        if int(user) not in valid_list:
+            continue
 
         # ['friends'] returns the list of such elements:
         # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
         friendproperties = users[user]['friends']
 
         # compute the benford score for accounts with more than 100 friends
-        p = 0
-        if int(user) in valid_users:
-            # A p score closer to 1 means that the user follows Benford's Law
-            if len(friendproperties) > 100:
-                benford_degree, p = compute_benford_score(friendproperties, 'chi-square')
-
-            # filling our lists that we want to plot
-            # if we don't want to plot the users with less than 100 friends, indent this
+        if len(friendproperties) < 100:
             if "bot" in users[user]['user_dataset']:
-                fakeusers.append(user)
-                fakeuserbenford.append(p)
+                lost_bot = lost_bot + 1
             else:
-                realusers.append(user)
-                realuserbenford.append(p)
-            results = results.append({'id' : int(user), 'benford_score' : p}, ignore_index=True)
+                lost_real = lost_real + 1
+            
+            results = results.append({'id' : int(user), 'benford_score' : 0}, ignore_index=True)
+            continue
+ 
+        # A p score closer to 1 means that the user follows Benford's Law
+        benford_degree, p = compute_benford_score(friendproperties, 'chi-square')
+        results = results.append({'id' : int(user), 'benford_score' : p}, ignore_index=True)
+
+        # filling our lists that we want to plot
+        if "bot" in users[user]['user_dataset']:
+            fakeusers.append(user)
+            fakeuserbenford.append(p)
+        else:
+            realusers.append(user)
+            realuserbenford.append(p)
 
     # # plotting users
     print("amount of real users: ", len(realusers))
     print("amount of bots: ", len(fakeusers))
-    # print("lost real users: ", lost_real)
-    # print("lost bots: ", lost_bot)
+    print("lost real users: ", lost_real)
+    print("lost bots: ", lost_bot)
 
-    plt.plot(fakeusers, fakeuserbenford, color='red', marker='o')
-    plt.plot(realusers, realuserbenford, color='green', marker='o')
-    plt.show()
+    # plt.rcParams.update({'font.size': 22})
+    # plt.plot(fakeusers, fakeuserbenford, color='red', marker='o', linestyle='None', label="Bot")
+    # plt.plot(realusers, realuserbenford, color='green', marker='o', linestyle='None', label="Real user")
+    # plt.xlabel("User ID", fontsize='large')
+    # plt.ylabel("P value", fontsize='large')
+    # plt.axhline(y=0.05, color='black', linestyle='-')
+    # plt.xticks([])
+    # plt.legend()
+    # plt.show()
 
     results['id'] = results['id'].astype('int64')
 
@@ -241,15 +257,14 @@ def random_forest(feature_names, data):
     performance_metrics(rf_best, feature_names, y_test, y_pred)
 
 if __name__ == '__main__':
-    calculate_benford_for_each_user()
-    # Baseline
+    # # Baseline
     # columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
     #    'no_followers', 'following_rate', 'belongs_to_list', 'location',
     #    'has_bio', 'bot']
     # profile_features = pd.read_csv('profile_features.csv', header=0)
     # random_forest(columns[:-1], profile_features[columns])
 
-    # Graph features
+    # # Graph features
     # columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
     #    'no_followers', 'following_rate', 'belongs_to_list', 'location',
     #    'has_bio', 'beetweenness_centrality',
@@ -261,7 +276,7 @@ if __name__ == '__main__':
 
     # Add the benford scores
 
-    # benford_scores = calculate_benford_for_each_user()
+    benford_scores = calculate_benford_for_each_user()
 
     # # Baseline Benford score
     # columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
