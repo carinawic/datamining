@@ -10,6 +10,7 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from statistics import mean
+from math import log10
 
 benfords_probs = {
     1 : 30.1,
@@ -33,9 +34,7 @@ def chisq_stat(o, e):
 def benford_score_chisquare(fdf_array, no_of_fsds):
     # dof = no of categories - 1
     # convert the expected FSDs frequencies from percentages to numbers
-    benford_array = []
-    for elem in benford_probs_array:
-        benford_array.append(no_of_fsds * (elem / 100))
+    benford_array = [no_of_fsds * log10(1 + 1 / n) for n in range(1, 10)]
     # print(benford_array)
     chisq, p = chisquare(f_obs=fdf_array, f_exp=benford_array)
     # print(f'chisq = {chisq}')
