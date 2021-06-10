@@ -195,6 +195,18 @@ def generate_network_from_edges(inputfile):
     return G
 
 
+def generate_network_lcc(edges_files):
+    all_edges = pd.DataFrame(columns=['source_id', 'target_id'])
+    for file in edges_files:
+        edges = pd.read_csv('{}.csv'.format(file), header=0, dtype=int)
+        all_edges = all_edges.append(edges, ignore_index=True)
+
+    print('No of edges', all_edges.shape[0])
+    print(all_edges.head(10))
+    G = generate_directed_network(all_edges)
+    return G
+
+
 def convert_graph_to_gml(G, filepath):
     nx.write_gml(G, filepath)
     # might need to write ids to a file in network.py to save RAM
@@ -202,5 +214,8 @@ def convert_graph_to_gml(G, filepath):
 
 if __name__ == '__main__':
     # G = create_network("friends", True, dataset_list[1:2])
-    G = generate_network_from_edges('crawled-data/complete_edges_combined.csv')
+    edges_files = ['crawled-friends/alex_2', 'crawled-friends/stefi_2', 'crawled-friends/ella_2', 
+    'crawl-friends/E13_real_friends', 'crawl-friends/FSF_bot_friends', 'crawl-friends/INT_bot_friends', 
+    'crawl-friends/TFP_real_friends', 'crawl-friends/TWT_bot_friends']
+    G = generate_network_lcc(edges_files)
     convert_graph_to_gml(G, "network.gml")

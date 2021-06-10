@@ -63,10 +63,10 @@ def analyse_connectivity(G):
 
 
 def compute_network_stats(G):
-    # analyse_connectivity(G)
-    # degree_distribution(G)
+    analyse_connectivity(G)
+    degree_distribution(G)
     # eigenvector_centrality(G)
-    # clustering(G)
+    clustering(G)
     compute_diameter(G)
 
 
@@ -141,6 +141,6 @@ if __name__ == '__main__':
         exit()
 
     G = load_data_gml(args.inputfile)
-    # nk.overview(G)
+    nk.overview(G)
     # compute_network_stats(G)
     compute_graph_features(G, args.idsfile, args.inputfile, args.outputfile)
