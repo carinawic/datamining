@@ -218,12 +218,14 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--type", help="Specify the type of the users in the network")
     args = parser.parse_args()
 
-    if args.type is "fake":
-        edges_bots = ['crawl-friends/stefi_2', 'crawled-friends/stefi_2']
-    elif args.type is "real":
+    if args.type == "fake":
+        print('fake')
+        edges_files = ['crawl-friends/stefi_2', 'crawled-friends/stefi_2']
+    elif args.type == "real":
+        print('real')
         # generate a small network to analyse the lcc with the users for 
         # which we crawled the friends of 50 of their friends
-        edges_real = ['crawl-friends/alex_2',  'crawled-friends/alex_2', 'crawl-friends/ella_2',
+        edges_files = ['crawl-friends/alex_2',  'crawled-friends/alex_2', 'crawl-friends/ella_2',
         'crawled-friends/ella_2']
     else:
         edges_files = ['crawled-friends/alex_2', 'crawled-friends/stefi_2', 'crawled-friends/ella_2', 
