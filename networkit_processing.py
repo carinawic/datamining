@@ -92,7 +92,6 @@ def compute_graph_features(G, dataset, input_file, output_file):
 
     # get a list of user IDs
     users = pd.read_csv(dataset, header=0, usecols=[0], delimiter=' ', converters={'id': str})
-    # conver the user IDs to a dictionary
     ids_list = users['id'].to_list()
 
     # list of ids that will be subtracted from the original list of ids to identify the isolated nodes
@@ -107,8 +106,6 @@ def compute_graph_features(G, dataset, input_file, output_file):
         if labels_list[u] in ids_list:
             nodes.append(labels_list[u])
             f.writerow([labels_list[u], btwn.score(u), lcc.score(u), d.score(u)])
-
-    # get the isolated nodes
 
 
 def load_data_gml(filepath):

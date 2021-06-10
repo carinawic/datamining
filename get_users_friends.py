@@ -1,4 +1,5 @@
 import sys
+from pandas.core.algorithms import unique
 
 import tweepy
 import json
@@ -9,6 +10,25 @@ from time import sleep
 from math import sqrt
 
 dataset_list = ["E13_real", "TFP_real", "FSF_bot", "INT_bot", "TWT_bot"]
+
+
+def no_unique_friends():
+    f = open('final_dataset.json', 'r')
+    users = json.loads(f.read())
+
+    friends_list = []
+    for user in users:
+        # ['friends'] returns the list of such elements:
+        # {'12': {'followers_count': 5389306, 'friends_count': 4660}}
+        friends = users[user]['friends']
+        for friend in friends:
+            friends_list.append(int(friend)) 
+
+    unique_friends_df = pd.DataFrame(friends_list)
+    print(unique_friends_df.info())
+    unique_friends_df.drop_duplicates(keep='first', inplace=True)
+    print(unique_friends_df.shape[0])
+
 
 def subset_of_friends():
     f = open('final_dataset.json', 'r')
@@ -24,6 +44,7 @@ def subset_of_friends():
             friends[friend]['friends_count'], 'dataset': users[user]['user_dataset']})
 
     friends_df = pd.DataFrame(friends_list, columns = ['source_id', 'target_id', 'friends_count', 'dataset'])
+
     # write the friends to be crawled to 5 csv files divided by the dataset name
     for dataset in dataset_list:
         dataset_df = pd.DataFrame(friends_df[friends_df.dataset == dataset])
@@ -130,6 +151,7 @@ def main():
 
 
 # main invoked here    
-main()
+# main()
 # subset_of_friends()
 # get_subset_of_friends()
+no_unique_friends()

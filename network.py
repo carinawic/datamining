@@ -4,6 +4,7 @@ import networkx as nx
 import networkit as nk
 import pickle
 import matplotlib.pyplot as plt
+import argparse
 
 dataset_list = ["E13_real", "TFP_real", "FSF_bot", "INT_bot", "TWT_bot"]
 
@@ -213,9 +214,21 @@ def convert_graph_to_gml(G, filepath):
 
 
 if __name__ == '__main__':
-    # G = create_network("friends", True, dataset_list[1:2])
-    edges_files = ['crawled-friends/alex_2', 'crawled-friends/stefi_2', 'crawled-friends/ella_2', 
-    'crawl-friends/E13_real_friends', 'crawl-friends/FSF_bot_friends', 'crawl-friends/INT_bot_friends', 
-    'crawl-friends/TFP_real_friends', 'crawl-friends/TWT_bot_friends']
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--type", help="Specify the type of the users in the network")
+    args = parser.parse_args()
+
+    if args.type is "fake":
+        edges_bots = ['crawl-friends/stefi_2', 'crawled-friends/stefi_2']
+    elif args.type is "real":
+        # generate a small network to analyse the lcc with the users for 
+        # which we crawled the friends of 50 of their friends
+        edges_real = ['crawl-friends/alex_2',  'crawled-friends/alex_2', 'crawl-friends/ella_2',
+        'crawled-friends/ella_2']
+    else:
+        edges_files = ['crawled-friends/alex_2', 'crawled-friends/stefi_2', 'crawled-friends/ella_2', 
+        'crawl-friends/E13_real_friends', 'crawl-friends/FSF_bot_friends', 'crawl-friends/INT_bot_friends', 
+        'crawl-friends/TFP_real_friends', 'crawl-friends/TWT_bot_friends']
+        
     G = generate_network_lcc(edges_files)
     convert_graph_to_gml(G, "network.gml")
