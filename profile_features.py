@@ -118,12 +118,11 @@ def compute_feature_vector(input_file, features, output_file):
 
 def get_profile_features_subset():
     edges_files = ['crawl-friends/alex_2', 'crawl-friends/ella_2', 'crawl-friends/stefi_2']
-    edges = pd.read_csv('{}.csv'.format(edges_files[0]), header=0, dtype=int)
-    user_ids = edges['source_id'].to_list()
+    user_ids = []
     for file in edges_files:
-        edges = pd.read_csv('{}.csv'.format(file), header=0, dtype=int)['source_id']
-        edges.drop_duplicates(keep='first', inplace=True)
-        user_ids.append(edges.to_list())
+        edges = pd.read_csv('{}.csv'.format(file), header=0, dtype=int)
+        edges.drop_duplicates(subset='source_id', keep='first', inplace=True)
+        user_ids.extend(edges['source_id'].to_list())
 
     print(len(user_ids))
     # select profile features
