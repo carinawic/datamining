@@ -78,14 +78,12 @@ def calculate_benford_for_each_user():
     
     results = pd.DataFrame(columns = ['id', 'benford_score'])
 
-    df = pd.read_csv("final_data.txt", sep='[ \n]', header=None, names= ['id', 'type'], engine="python")
-    df = df.set_index('id')
-
-    valid_list = df.index.tolist()
+    df = pd.read_csv('data-valid-users/final_data', header=0, delimiter=' ')
+    valid_list = df['id'].to_list()
 
     print("Total bots + users: {}".format(df.shape[0]))
 
-    bots = df[df.type.str.contains('bot', case=True)].shape[0]
+    bots = df[df.dataset.str.contains('bot', case=True)].shape[0]
 
     print("Total users: {}".format(df.shape[0] - bots))
     print("Total bots: {}".format(bots))
@@ -276,7 +274,7 @@ if __name__ == '__main__':
         'no_followers', 'following_rate', 'belongs_to_list', 'location',
         'has_bio', 'beetweenness_centrality',
         'local_clustering_coefficient', 'degree_centrality', 'bot']
-        merged_data = merge_features('features/profile_features_subset.csv', 'graph_features.csv')
+        merged_data = merge_features('features/profile_features_subset.csv', 'features/graph_features_subset.csv')
         # remove the id and user_id columns from the features after the join
         random_forest(columns[:-1], merged_data[columns])
     elif args.type == "benford":
@@ -296,7 +294,6 @@ if __name__ == '__main__':
         'has_bio', 'beetweenness_centrality',
         'local_clustering_coefficient', 'degree_centrality', 'benford_score', 'bot']
         benford_scores = calculate_benford_for_each_user()
-        data = merge_features('features/profile_features_subset.csv', 'graph_features.csv')
+        data = merge_features('features/profile_features_subset.csv', 'features/graph_features_subset.csv')
         merged_data = data.merge(benford_scores, on='id', how='inner')
-
         random_forest(columns[:-1], merged_data[columns])
