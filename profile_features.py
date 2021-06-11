@@ -116,4 +116,26 @@ def compute_feature_vector(input_file, features, output_file):
             f.writerow(f_vec)
 
 
-compute_feature_vector('hydrated_tweets.json', features, 'profile_features')
+def get_profile_features_subset():
+    edges_files = ['crawl-friends/alex_2', 'crawl-friends/ella_2', 'crawl-friends/stefi_2']
+    edges = pd.read_csv('{}.csv'.format(edges_files[0]), header=0, dtype=int)
+    user_ids = edges['source_id'].to_list()
+    for file in edges_files:
+        edges = pd.read_csv('{}.csv'.format(file), header=0, dtype=int)['source_id']
+        edges.drop_duplicates(keep='first', inplace=True)
+        user_ids.append(edges.to_list())
+
+    print(len(user_ids))
+    # select profile features
+    profile_features_subset = pd.read_csv('profile_features.csv', header=0)
+    print('profile_features_subset', profile_features_subset.shape[0])
+    
+    f = csv.writer(open('profile_features_subset.csv', 'w'))
+    fields = features + ['dataset', 'bot']
+    f.writerow(fields)
+    for (_, feature) in profile_features_subset.iterrows():
+        if feature['id'] in user_ids:
+            f.writerow(feature)
+
+# compute_feature_vector('hydrated_tweets.json', features, 'profile_features')
+get_profile_features_subset()
