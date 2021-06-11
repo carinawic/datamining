@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import GridSearchCV
 from statistics import mean
 from math import log10
+import argparse
 
 benfords_probs = {
     1 : 30.1,
@@ -256,42 +257,46 @@ def random_forest(feature_names, data):
     print('RandomForestClassifier performance after tuning on the test data')
     performance_metrics(rf_best, feature_names, y_test, y_pred)
 
+
 if __name__ == '__main__':
-    # Baseline
-    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-       'no_followers', 'following_rate', 'belongs_to_list', 'location',
-       'has_bio', 'bot']
-    profile_features = pd.read_csv('profile_features.csv', header=0)
-    random_forest(columns[:-1], profile_features[columns])
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--classifier-type", help="Specify the type of the classifier")
+    args = parser.parse_args()
 
-    # Graph features
-    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-       'no_followers', 'following_rate', 'belongs_to_list', 'location',
-       'has_bio', 'beetweenness_centrality',
-       'local_clustering_coefficient', 'degree_centrality', 'bot']
-    merged_data = merge_features('profile_features.csv', 'graph_features.csv')
-    # remove the id and user_id columns from the features after the join
-    random_forest(columns[:-1], merged_data[columns])
-
-
-    # Add the benford scores
-
-    benford_scores = calculate_benford_for_each_user()
-
-    # Baseline Benford score
-    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+    if args.type == "profile":
+        # Baseline
+        columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+        'no_followers', 'following_rate', 'belongs_to_list', 'location',
+        'has_bio', 'bot']
+        profile_features = pd.read_csv('features/profile_features_subset.csv', header=0)
+        random_forest(columns[:-1], profile_features[columns])
+    elif args.type == "graph":
+        # Graph features
+        columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+        'no_followers', 'following_rate', 'belongs_to_list', 'location',
+        'has_bio', 'beetweenness_centrality',
+        'local_clustering_coefficient', 'degree_centrality', 'bot']
+        merged_data = merge_features('features/profile_features_subset.csv', 'graph_features.csv')
+        # remove the id and user_id columns from the features after the join
+        random_forest(columns[:-1], merged_data[columns])
+    elif args.type == "benford":
+        # Add the benford scores
+        benford_scores = calculate_benford_for_each_user()
+        # Baseline Benford score
+        columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
        'no_followers', 'following_rate', 'belongs_to_list', 'location',
        'has_bio', 'benford_score', 'bot']
-    profile_features = pd.read_csv('profile_features.csv', header=0)
-    merged_data = profile_features.merge(benford_scores, on='id', how='inner')
-    random_forest(columns[:-1], merged_data[columns])
+        profile_features = pd.read_csv('features/profile_features_subset.csv', header=0)
+        merged_data = profile_features.merge(benford_scores, on='id', how='inner')
+        random_forest(columns[:-1], merged_data[columns])
+    else:
+        # Benford score + graph features
+        columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
+        'no_followers', 'following_rate', 'belongs_to_list', 'location',
+        'has_bio', 'beetweenness_centrality',
+        'local_clustering_coefficient', 'degree_centrality', 'benford_score', 'bot']
+        benford_scores = calculate_benford_for_each_user()
+        data = merge_features('features/profile_features_subset.csv', 'graph_features.csv')
+        merged_data = data.merge(benford_scores, on='id', how='inner')
 
-    # Benford score + graph features
-    columns = ['ff_ratio', 'no_tweets', 'profile_has_name', 'no_friends',
-       'no_followers', 'following_rate', 'belongs_to_list', 'location',
-       'has_bio', 'beetweenness_centrality',
-       'local_clustering_coefficient', 'degree_centrality', 'benford_score', 'bot']
-    data = merge_features('profile_features.csv', 'graph_features.csv')
-    merged_data = data.merge(benford_scores, on='id', how='inner')
-
-    random_forest(columns[:-1], merged_data[columns])
+        random_forest(columns[:-1], merged_data[columns])
