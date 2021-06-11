@@ -260,7 +260,7 @@ def random_forest(feature_names, data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("-t", "--classifier-type", help="Specify the type of the classifier")
+    parser.add_argument("-t", "--type", help="Specify the type of the classifier")
     args = parser.parse_args()
 
     if args.type == "profile":
