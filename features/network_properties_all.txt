@@ -16,4 +16,4 @@ No of WCCs 30
 Powerlaw degree distribution 2070207.993100918
 No of nodes LCC 4075961
 Graph diameter (10, 0)
-Average Cluster Coeficient   0.01283214105793450881612090680101
+Clustering coefficent 0.004560062538000521
