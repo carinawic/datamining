@@ -1,0 +1,185 @@
+RandomForestClassifier performance before tuning
+Confusion matrix  [[15  0]
+ [ 2  6]]
+              precision    recall  f1-score   support
+
+           0       0.88      1.00      0.94        15
+           1       1.00      0.75      0.86         8
+
+    accuracy                           0.91        23
+   macro avg       0.94      0.88      0.90        23
+weighted avg       0.92      0.91      0.91        23
+
+0.9130434782608695
+degree_centrality               0.304523
+ff_ratio                        0.192739
+no_tweets                       0.170309
+following_rate                  0.085897
+no_followers                    0.083106
+no_friends                      0.043050
+local_clustering_coefficient    0.036269
+beetweenness_centrality         0.031128
+belongs_to_list                 0.029540
+has_bio                         0.015727
+location                        0.007713
+profile_has_name                0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[14  1]
+ [ 0  7]]
+              precision    recall  f1-score   support
+
+           0       1.00      0.93      0.97        15
+           1       0.88      1.00      0.93         7
+
+    accuracy                           0.95        22
+   macro avg       0.94      0.97      0.95        22
+weighted avg       0.96      0.95      0.96        22
+
+0.9545454545454546
+degree_centrality               0.313197
+ff_ratio                        0.179628
+no_tweets                       0.158329
+following_rate                  0.105172
+no_followers                    0.093668
+no_friends                      0.060128
+local_clustering_coefficient    0.035041
+beetweenness_centrality         0.024295
+belongs_to_list                 0.013091
+has_bio                         0.010542
+location                        0.006909
+profile_has_name                0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[15  0]
+ [ 0  7]]
+              precision    recall  f1-score   support
+
+           0       1.00      1.00      1.00        15
+           1       1.00      1.00      1.00         7
+
+    accuracy                           1.00        22
+   macro avg       1.00      1.00      1.00        22
+weighted avg       1.00      1.00      1.00        22
+
+1.0
+degree_centrality               0.301801
+ff_ratio                        0.191319
+no_tweets                       0.162969
+following_rate                  0.095827
+no_followers                    0.095565
+no_friends                      0.054550
+local_clustering_coefficient    0.038106
+beetweenness_centrality         0.021261
+belongs_to_list                 0.017267
+has_bio                         0.014404
+location                        0.006931
+profile_has_name                0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[14  0]
+ [ 2  6]]
+              precision    recall  f1-score   support
+
+           0       0.88      1.00      0.93        14
+           1       1.00      0.75      0.86         8
+
+    accuracy                           0.91        22
+   macro avg       0.94      0.88      0.90        22
+weighted avg       0.92      0.91      0.91        22
+
+0.9090909090909091
+degree_centrality               0.334248
+ff_ratio                        0.194876
+no_tweets                       0.135576
+following_rate                  0.090782
+no_followers                    0.084258
+no_friends                      0.044376
+local_clustering_coefficient    0.041688
+beetweenness_centrality         0.026848
+has_bio                         0.024712
+belongs_to_list                 0.016326
+location                        0.006310
+profile_has_name                0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[12  2]
+ [ 1  7]]
+              precision    recall  f1-score   support
+
+           0       0.92      0.86      0.89        14
+           1       0.78      0.88      0.82         8
+
+    accuracy                           0.86        22
+   macro avg       0.85      0.87      0.86        22
+weighted avg       0.87      0.86      0.87        22
+
+0.8636363636363636
+degree_centrality               0.354574
+ff_ratio                        0.183576
+no_tweets                       0.147922
+no_followers                    0.084906
+following_rate                  0.084597
+no_friends                      0.045267
+has_bio                         0.029853
+local_clustering_coefficient    0.023690
+belongs_to_list                 0.023407
+beetweenness_centrality         0.017166
+location                        0.005041
+profile_has_name                0.000000
+dtype: float64
+Accuracy of baseline model 0.9280632411067193
+RandomForestClassifier performance on the test data
+Confusion matrix  [[36  1]
+ [ 4 15]]
+              precision    recall  f1-score   support
+
+           0       0.90      0.97      0.94        37
+           1       0.94      0.79      0.86        19
+
+    accuracy                           0.91        56
+   macro avg       0.92      0.88      0.90        56
+weighted avg       0.91      0.91      0.91        56
+
+0.9107142857142857
+degree_centrality               0.334580
+ff_ratio                        0.187197
+no_tweets                       0.153677
+no_followers                    0.089442
+following_rate                  0.089397
+no_friends                      0.047951
+local_clustering_coefficient    0.033813
+beetweenness_centrality         0.020093
+belongs_to_list                 0.018731
+has_bio                         0.018332
+location                        0.006788
+profile_has_name                0.000000
+dtype: float64
+{'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000], 'max_features': ['auto', 'sqrt'], 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, None], 'min_samples_split': [2, 5, 10], 'min_samples_leaf': [1, 2, 4], 'bootstrap': [True, False]}
+{'bootstrap': False, 'max_depth': 30, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 200}
+RandomForestClassifier performance after tuning on the test data
+Confusion matrix  [[36  1]
+ [ 4 15]]
+              precision    recall  f1-score   support
+
+           0       0.90      0.97      0.94        37
+           1       0.94      0.79      0.86        19
+
+    accuracy                           0.91        56
+   macro avg       0.92      0.88      0.90        56
+weighted avg       0.91      0.91      0.91        56
+
+0.9107142857142857
+degree_centrality               0.405566
+ff_ratio                        0.190757
+no_tweets                       0.140577
+following_rate                  0.098800
+no_followers                    0.067034
+no_friends                      0.038073
+belongs_to_list                 0.021800
+local_clustering_coefficient    0.020126
+has_bio                         0.011589
+beetweenness_centrality         0.003839
+location                        0.001841
+profile_has_name                0.000000
+dtype: float64
