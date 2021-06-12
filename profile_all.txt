@@ -1,0 +1,164 @@
+RandomForestClassifier performance before tuning
+Confusion matrix  [[216   6]
+ [ 13  93]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.97      0.96       222
+           1       0.94      0.88      0.91       106
+
+    accuracy                           0.94       328
+   macro avg       0.94      0.93      0.93       328
+weighted avg       0.94      0.94      0.94       328
+
+0.9420731707317073
+following_rate      0.248961
+no_tweets           0.229876
+no_followers        0.181841
+no_friends          0.148528
+ff_ratio            0.136310
+has_bio             0.028276
+belongs_to_list     0.013071
+location            0.010853
+profile_has_name    0.002285
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[216   6]
+ [ 21  85]]
+              precision    recall  f1-score   support
+
+           0       0.91      0.97      0.94       222
+           1       0.93      0.80      0.86       106
+
+    accuracy                           0.92       328
+   macro avg       0.92      0.89      0.90       328
+weighted avg       0.92      0.92      0.92       328
+
+0.9176829268292683
+following_rate      0.269539
+no_tweets           0.202055
+no_followers        0.196193
+no_friends          0.142685
+ff_ratio            0.141184
+has_bio             0.029090
+belongs_to_list     0.011188
+location            0.008066
+profile_has_name    0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[208  14]
+ [  9  97]]
+              precision    recall  f1-score   support
+
+           0       0.96      0.94      0.95       222
+           1       0.87      0.92      0.89       106
+
+    accuracy                           0.93       328
+   macro avg       0.92      0.93      0.92       328
+weighted avg       0.93      0.93      0.93       328
+
+0.9298780487804879
+following_rate      0.254520
+no_tweets           0.230474
+no_followers        0.188899
+no_friends          0.140473
+ff_ratio            0.140314
+has_bio             0.023074
+belongs_to_list     0.010763
+location            0.008902
+profile_has_name    0.002581
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[215   7]
+ [ 17  89]]
+              precision    recall  f1-score   support
+
+           0       0.93      0.97      0.95       222
+           1       0.93      0.84      0.88       106
+
+    accuracy                           0.93       328
+   macro avg       0.93      0.90      0.91       328
+weighted avg       0.93      0.93      0.93       328
+
+0.926829268292683
+following_rate      0.250162
+no_tweets           0.229759
+no_followers        0.190788
+no_friends          0.139815
+ff_ratio            0.134563
+has_bio             0.027000
+belongs_to_list     0.015201
+location            0.010324
+profile_has_name    0.002389
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[214   8]
+ [ 13  93]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.96      0.95       222
+           1       0.92      0.88      0.90       106
+
+    accuracy                           0.94       328
+   macro avg       0.93      0.92      0.93       328
+weighted avg       0.94      0.94      0.94       328
+
+0.9359756097560976
+following_rate      0.244686
+no_tweets           0.240541
+no_followers        0.183075
+no_friends          0.148263
+ff_ratio            0.133160
+has_bio             0.024121
+belongs_to_list     0.014613
+location            0.009075
+profile_has_name    0.002466
+dtype: float64
+Accuracy of baseline model 0.9304878048780488
+RandomForestClassifier performance on the test data
+Confusion matrix  [[529  18]
+ [ 35 227]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.97      0.95       547
+           1       0.93      0.87      0.90       262
+
+    accuracy                           0.93       809
+   macro avg       0.93      0.92      0.92       809
+weighted avg       0.93      0.93      0.93       809
+
+0.934487021013597
+following_rate      0.257450
+no_tweets           0.222804
+no_followers        0.184374
+no_friends          0.146554
+ff_ratio            0.139527
+has_bio             0.026687
+belongs_to_list     0.010998
+location            0.009537
+profile_has_name    0.002070
+dtype: float64
+{'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000], 'max_features': ['auto', 'sqrt'], 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, None], 'min_samples_split': [2, 5, 10], 'min_samples_leaf': [1, 2, 4], 'bootstrap': [True, False]}
+{'bootstrap': True, 'max_depth': 110, 'max_features': 'sqrt', 'min_samples_leaf': 1, 'min_samples_split': 2, 'n_estimators': 400}
+RandomForestClassifier performance after tuning on the test data
+Confusion matrix  [[529  18]
+ [ 37 225]]
+              precision    recall  f1-score   support
+
+           0       0.93      0.97      0.95       547
+           1       0.93      0.86      0.89       262
+
+    accuracy                           0.93       809
+   macro avg       0.93      0.91      0.92       809
+weighted avg       0.93      0.93      0.93       809
+
+0.9320148331273177
+following_rate      0.279100
+no_tweets           0.230227
+no_followers        0.172065
+no_friends          0.141096
+ff_ratio            0.136680
+has_bio             0.019839
+location            0.009485
+belongs_to_list     0.009443
+profile_has_name    0.002066
+dtype: float64
