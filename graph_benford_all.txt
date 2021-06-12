@@ -1,0 +1,199 @@
+Total bots + users: 2449
+Total users: 1657
+Total bots: 792
+amount of real users:  1357
+amount of bots:  245
+lost real users:  300
+lost bots:  535
+RandomForestClassifier performance before tuning
+Confusion matrix  [[216   6]
+ [ 14  92]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.97      0.96       222
+           1       0.94      0.87      0.90       106
+
+    accuracy                           0.94       328
+   macro avg       0.94      0.92      0.93       328
+weighted avg       0.94      0.94      0.94       328
+
+0.9390243902439024
+following_rate                  0.214051
+no_tweets                       0.189335
+no_followers                    0.160243
+ff_ratio                        0.131246
+no_friends                      0.125712
+degree_centrality               0.055907
+has_bio                         0.033942
+benford_score                   0.022355
+belongs_to_list                 0.021605
+beetweenness_centrality         0.021190
+local_clustering_coefficient    0.013455
+location                        0.008835
+profile_has_name                0.002123
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[214   8]
+ [ 17  89]]
+              precision    recall  f1-score   support
+
+           0       0.93      0.96      0.94       222
+           1       0.92      0.84      0.88       106
+
+    accuracy                           0.92       328
+   macro avg       0.92      0.90      0.91       328
+weighted avg       0.92      0.92      0.92       328
+
+0.9237804878048781
+following_rate                  0.224560
+no_followers                    0.174522
+no_tweets                       0.171646
+ff_ratio                        0.141245
+no_friends                      0.119417
+degree_centrality               0.051364
+has_bio                         0.036427
+benford_score                   0.022043
+beetweenness_centrality         0.018911
+belongs_to_list                 0.017935
+local_clustering_coefficient    0.014833
+location                        0.007098
+profile_has_name                0.000000
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[209  13]
+ [  9  97]]
+              precision    recall  f1-score   support
+
+           0       0.96      0.94      0.95       222
+           1       0.88      0.92      0.90       106
+
+    accuracy                           0.93       328
+   macro avg       0.92      0.93      0.92       328
+weighted avg       0.93      0.93      0.93       328
+
+0.9329268292682927
+following_rate                  0.206793
+no_tweets                       0.184246
+no_followers                    0.172766
+ff_ratio                        0.142818
+no_friends                      0.117485
+degree_centrality               0.056221
+has_bio                         0.027693
+benford_score                   0.026037
+beetweenness_centrality         0.022085
+belongs_to_list                 0.019570
+local_clustering_coefficient    0.014156
+location                        0.007861
+profile_has_name                0.002269
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[218   4]
+ [ 19  87]]
+              precision    recall  f1-score   support
+
+           0       0.92      0.98      0.95       222
+           1       0.96      0.82      0.88       106
+
+    accuracy                           0.93       328
+   macro avg       0.94      0.90      0.92       328
+weighted avg       0.93      0.93      0.93       328
+
+0.9298780487804879
+following_rate                  0.210442
+no_tweets                       0.181346
+no_followers                    0.173707
+ff_ratio                        0.139384
+no_friends                      0.117644
+degree_centrality               0.052086
+has_bio                         0.035542
+benford_score                   0.025478
+belongs_to_list                 0.022372
+beetweenness_centrality         0.018407
+local_clustering_coefficient    0.012190
+location                        0.009036
+profile_has_name                0.002366
+dtype: float64
+RandomForestClassifier performance before tuning
+Confusion matrix  [[214   8]
+ [ 14  92]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.96      0.95       222
+           1       0.92      0.87      0.89       106
+
+    accuracy                           0.93       328
+   macro avg       0.93      0.92      0.92       328
+weighted avg       0.93      0.93      0.93       328
+
+0.9329268292682927
+following_rate                  0.210519
+no_tweets                       0.189829
+no_followers                    0.167618
+ff_ratio                        0.134535
+no_friends                      0.122220
+degree_centrality               0.051522
+has_bio                         0.029848
+benford_score                   0.026187
+belongs_to_list                 0.021183
+beetweenness_centrality         0.020459
+local_clustering_coefficient    0.015828
+location                        0.008023
+profile_has_name                0.002227
+dtype: float64
+Accuracy of baseline model 0.9317073170731708
+RandomForestClassifier performance on the test data
+Confusion matrix  [[532  15]
+ [ 35 227]]
+              precision    recall  f1-score   support
+
+           0       0.94      0.97      0.96       547
+           1       0.94      0.87      0.90       262
+
+    accuracy                           0.94       809
+   macro avg       0.94      0.92      0.93       809
+weighted avg       0.94      0.94      0.94       809
+
+0.9381953028430161
+following_rate                  0.218774
+no_tweets                       0.178464
+no_followers                    0.172236
+ff_ratio                        0.140407
+no_friends                      0.122044
+degree_centrality               0.053854
+has_bio                         0.031997
+benford_score                   0.025193
+belongs_to_list                 0.019606
+local_clustering_coefficient    0.015764
+beetweenness_centrality         0.011451
+location                        0.008170
+profile_has_name                0.002041
+dtype: float64
+{'n_estimators': [200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000], 'max_features': ['auto', 'sqrt'], 'max_depth': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, None], 'min_samples_split': [2, 5, 10], 'min_samples_leaf': [1, 2, 4], 'bootstrap': [True, False]}
+{'bootstrap': False, 'max_depth': 40, 'max_features': 'sqrt', 'min_samples_leaf': 2, 'min_samples_split': 10, 'n_estimators': 1200}
+RandomForestClassifier performance after tuning on the test data
+Confusion matrix  [[532  15]
+ [ 37 225]]
+              precision    recall  f1-score   support
+
+           0       0.93      0.97      0.95       547
+           1       0.94      0.86      0.90       262
+
+    accuracy                           0.94       809
+   macro avg       0.94      0.92      0.92       809
+weighted avg       0.94      0.94      0.93       809
+
+0.9357231149567367
+following_rate                  0.213904
+no_followers                    0.181373
+no_tweets                       0.172415
+ff_ratio                        0.149865
+no_friends                      0.133097
+degree_centrality               0.056437
+has_bio                         0.027330
+belongs_to_list                 0.019605
+benford_score                   0.018665
+local_clustering_coefficient    0.013515
+beetweenness_centrality         0.008849
+location                        0.004944
+profile_has_name                0.000000
+dtype: float64
